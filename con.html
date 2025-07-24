@@ -174,6 +174,14 @@
             margin-right: 8px;
         }
         
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e64a19;
+        }
+        
         .progress-container {
             width: 100%;
             background-color: var(--light-gray);
@@ -285,6 +293,10 @@
         
         .stat-card .success {
             color: var(--success);
+        }
+        
+        .stat-card .danger {
+            color: var(--danger);
         }
         
         .stat-card .warning {
@@ -431,6 +443,18 @@
             margin-bottom: 15px;
         }
         
+        .match-time {
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+        
+        .export-btn-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+        
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .container {
@@ -485,9 +509,14 @@
             .filter-group select {
                 width: 100%;
             }
+            
+            .export-btn-container {
+                justify-content: center;
+            }
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body>
     <header>
@@ -538,6 +567,17 @@
             <div id="stage1" class="tab-content active">
                 <div class="card">
                     <h2>Common Matches <span class="badge">Appearing in ≥3 Sources</span></h2>
+                    <div class="filter-controls">
+                        <div class="filter-group">
+                            <label for="min-sources"><i class="fas fa-filter"></i> Min Sources:</label>
+                            <select id="min-sources">
+                                <option value="3">3+ Sources</option>
+                                <option value="4">4+ Sources</option>
+                                <option value="5">5 Sources</option>
+                            </select>
+                        </div>
+                    </div>
+                    
                     <div class="stats">
                         <div class="stat-card">
                             <h3>Total Matches</h3>
@@ -558,13 +598,14 @@
                             <thead>
                                 <tr>
                                     <th>Match</th>
+                                    <th>Time</th>
                                     <th>Sources</th>
                                     <th>Predictions</th>
                                 </tr>
                             </thead>
                             <tbody id="stage1-results">
                                 <tr>
-                                    <td colspan="3" class="empty-state">
+                                    <td colspan="4" class="empty-state">
                                         <i class="fas fa-futbol"></i>
                                         <p>Upload and analyze CSV files to see common matches</p>
                                     </td>
@@ -578,6 +619,18 @@
             <div id="stage2" class="tab-content">
                 <div class="card">
                     <h2>Consensus Predictions</h2>
+                    <div class="filter-controls">
+                        <div class="filter-group">
+                            <label for="min-consensus"><i class="fas fa-filter"></i> Min Consensus:</label>
+                            <select id="min-consensus">
+                                <option value="2">2+ Sources</option>
+                                <option value="3" selected>3+ Sources</option>
+                                <option value="4">4+ Sources</option>
+                                <option value="5">5 Sources</option>
+                            </select>
+                        </div>
+                    </div>
+                    
                     <div class="stats">
                         <div class="stat-card">
                             <h3>Consensus Matches</h3>
@@ -602,6 +655,7 @@
                             <thead>
                                 <tr>
                                     <th>Match</th>
+                                    <th>Time</th>
                                     <th>Prediction</th>
                                     <th>Consensus</th>
                                     <th>Sources</th>
@@ -609,7 +663,7 @@
                             </thead>
                             <tbody id="stage2-results">
                                 <tr>
-                                    <td colspan="4" class="empty-state">
+                                    <td colspan="5" class="empty-state">
                                         <i class="fas fa-futbol"></i>
                                         <p>No consensus predictions found yet</p>
                                     </td>
@@ -623,6 +677,9 @@
             <div id="stage3" class="tab-content">
                 <div class="card">
                     <h2>Safest Predictions</h2>
+                    <div class="export-btn-container">
+                        <button id="export-btn" class="btn btn-secondary"><i class="fas fa-download"></i> Export as PNG</button>
+                    </div>
                     <div class="filter-controls">
                         <div class="filter-group">
                             <label for="goal-difference"><i class="fas fa-filter"></i> Min Goal Difference:</label>
@@ -655,6 +712,7 @@
                             <thead>
                                 <tr>
                                     <th>Match</th>
+                                    <th>Time</th>
                                     <th>Prediction</th>
                                     <th>Goal Diff</th>
                                     <th>Sources</th>
@@ -662,7 +720,7 @@
                             </thead>
                             <tbody id="stage3-results">
                                 <tr>
-                                    <td colspan="4" class="empty-state">
+                                    <td colspan="5" class="empty-state">
                                         <i class="fas fa-futbol"></i>
                                         <p>No safe predictions found yet</p>
                                     </td>
@@ -683,6 +741,7 @@
         
         // DOM elements
         const analyzeBtn = document.getElementById('analyze-btn');
+        const exportBtn = document.getElementById('export-btn');
         const progressBar = document.getElementById('progress-bar');
         const tabBtns = document.querySelectorAll('.tab-btn');
         const tabContents = document.querySelectorAll('.tab-content');
@@ -859,10 +918,22 @@
                 const homeTeam = Object.entries(homeTeamCounts).sort((a, b) => b[1] - a[1])[0][0];
                 const awayTeam = Object.entries(awayTeamCounts).sort((a, b) => b[1] - a[1])[0][0];
                 
+                // Find the most common match time
+                const timeCounts = {};
+                group.matches.forEach(m => {
+                    if (m['Time'] || m['Date'] || m['DateTime']) {
+                        const time = m['Time'] || m['Date'] || m['DateTime'];
+                        timeCounts[time] = (timeCounts[time] || 0) + 1;
+                    }
+                });
+                
+                const matchTime = Object.entries(timeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Time not available';
+                
                 return {
                     match: `${homeTeam} vs ${awayTeam}`,
                     homeTeam,
                     awayTeam,
+                    matchTime,
                     sources,
                     sourceCount: sources.length,
                     predictions,
@@ -947,7 +1018,7 @@
             if (matches.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="3" class="empty-state">
+                        <td colspan="4" class="empty-state">
                             <i class="fas fa-futbol"></i>
                             <p>No common matches found across 3+ sources</p>
                         </td>
@@ -971,7 +1042,11 @@
                 const row = document.createElement('tr');
                 row.className = 'match-row';
                 row.innerHTML = `
-                    <td>${match.match}</td>
+                    <td>
+                        ${match.match}
+                        <div class="match-time">${match.matchTime}</div>
+                    </td>
+                    <td>${match.matchTime}</td>
                     <td>
                         <div class="sources-list">
                             ${match.sources.map(s => `<span class="source-badge">${s}</span>`).join('')}
@@ -996,7 +1071,7 @@
             if (matches.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="4" class="empty-state">
+                        <td colspan="5" class="empty-state">
                             <i class="fas fa-futbol"></i>
                             <p>No consensus predictions found yet</p>
                         </td>
@@ -1017,7 +1092,11 @@
                 const row = document.createElement('tr');
                 row.className = 'match-row';
                 row.innerHTML = `
-                    <td>${match.match}</td>
+                    <td>
+                        ${match.match}
+                        <div class="match-time">${match.matchTime}</div>
+                    </td>
+                    <td>${match.matchTime}</td>
                     <td><span class="goal-display ${match.predictionClass}">${match.predictionDisplay}</span></td>
                     <td>${match.consensusCount}/${match.sourceCount} sources</td>
                     <td>
@@ -1045,7 +1124,7 @@
             if (filteredMatches.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="4" class="empty-state">
+                        <td colspan="5" class="empty-state">
                             <i class="fas fa-futbol"></i>
                             <p>No safe predictions found with ${minGoalDiff}+ goal difference</p>
                         </td>
@@ -1069,7 +1148,11 @@
                     row.classList.add('highlight');
                 }
                 row.innerHTML = `
-                    <td>${match.match}</td>
+                    <td>
+                        ${match.match}
+                        <div class="match-time">${match.matchTime}</div>
+                    </td>
+                    <td>${match.matchTime}</td>
                     <td><span class="goal-display ${match.predictionClass}">${match.predictionDisplay}</span></td>
                     <td>${match.goalDifference}</td>
                     <td>
@@ -1091,6 +1174,45 @@
         function filterByGoalDifference() {
             const minGoalDiff = parseInt(document.getElementById('goal-difference').value);
             updateStage3Results(safePredictions, minGoalDiff);
+        }
+        
+        // Filter by minimum sources
+        function filterByMinSources() {
+            const minSources = parseInt(document.getElementById('min-sources').value);
+            const filteredMatches = allMatches.filter(match => match.sourceCount >= minSources);
+            updateStage1Results(filteredMatches);
+        }
+        
+        // Filter by minimum consensus
+        function filterByMinConsensus() {
+            const minConsensus = parseInt(document.getElementById('min-consensus').value);
+            const filteredMatches = consensusMatches.filter(match => match.consensusCount >= minConsensus);
+            updateStage2Results(filteredMatches);
+        }
+        
+        // Export to PNG
+        function exportToPNG() {
+            const element = document.getElementById('stage3');
+            const card = element.querySelector('.card');
+            
+            // Temporarily hide the export button for the screenshot
+            const exportBtn = document.getElementById('export-btn');
+            exportBtn.style.visibility = 'hidden';
+            
+            html2canvas(card, {
+                scale: 2,
+                logging: false,
+                useCORS: true,
+                allowTaint: true
+            }).then(canvas => {
+                exportBtn.style.visibility = 'visible';
+                
+                // Create download link
+                const link = document.createElement('a');
+                link.download = 'safest-predictions.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
         }
         
         // Main analyze function
@@ -1152,8 +1274,11 @@
             }
         });
         
-        // Initialize goal difference filter
+        // Initialize event listeners
         document.getElementById('goal-difference').addEventListener('change', filterByGoalDifference);
+        document.getElementById('min-sources').addEventListener('change', filterByMinSources);
+        document.getElementById('min-consensus').addEventListener('change', filterByMinConsensus);
+        exportBtn.addEventListener('click', exportToPNG);
     </script>
 </body>
 </html>
