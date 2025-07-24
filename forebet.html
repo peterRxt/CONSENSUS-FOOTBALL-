@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forebet HTML to CSV Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .upload-container {
+            border: 2px dashed #3498db;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        #fileInput {
+            display: none;
+        }
+        .upload-btn {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .upload-btn:hover {
+            background-color: #2980b9;
+        }
+        #fileName {
+            margin-top: 10px;
+            font-style: italic;
+        }
+        #convertBtn {
+            background-color: #2ecc71;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 20px auto;
+        }
+        #convertBtn:hover {
+            background-color: #27ae60;
+        }
+        #convertBtn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .preview {
+            margin-top: 30px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .success {
+            color: #27ae60;
+        }
+        .error {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <h1>Forebet HTML to CSV Converter</h1>
+    
+    <div class="upload-container">
+        <label for="fileInput" class="upload-btn">Choose Forebet HTML File</label>
+        <input type="file" id="fileInput" accept=".html,.htm" />
+        <div id="fileName">No file selected</div>
+    </div>
+    
+    <button id="convertBtn" disabled>Convert to CSV</button>
+    
+    <div class="status" id="status"></div>
+    
+    <div class="preview">
+        <h3>Preview (First 5 Rows)</h3>
+        <div id="tablePreview"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('fileInput');
+            const fileNameDisplay = document.getElementById('fileName');
+            const convertBtn = document.getElementById('convertBtn');
+            const statusDisplay = document.getElementById('status');
+            const tablePreview = document.getElementById('tablePreview');
+            
+            let fileContent = '';
+            
+            // Handle file selection
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    fileNameDisplay.textContent = `Selected: ${file.name}`;
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        fileContent = e.target.result;
+                        convertBtn.disabled = false;
+                        statusDisplay.textContent = 'File loaded successfully. Ready to convert.';
+                        statusDisplay.className = 'status success';
+                    };
+                    reader.readAsText(file);
+                } else {
+                    fileNameDisplay.textContent = 'No file selected';
+                    convertBtn.disabled = true;
+                    statusDisplay.textContent = '';
+                }
+            });
+            
+            // Handle conversion
+            convertBtn.addEventListener('click', function() {
+                if (!fileContent) {
+                    statusDisplay.textContent = 'No file content to convert.';
+                    statusDisplay.className = 'status error';
+                    return;
+                }
+                
+                try {
+                    // Parse the HTML content
+                    const parser = new DOMParser();
+                    const htmlDoc = parser.parseFromString(fileContent, 'text/html');
+                    
+                    // Find all match rows
+                    const matchRows = htmlDoc.querySelectorAll('.rcnt');
+                    
+                    // Prepare data array
+                    const data = [];
+                    
+                    // Process each match row
+                    matchRows.forEach(row => {
+                        // Extract time
+                        const timeElement = row.querySelector('.date_bah');
+                        const time = timeElement ? timeElement.textContent.trim() : '';
+                        
+                        // Extract home team
+                        const homeTeamElement = row.querySelector('.homeTeam');
+                        const homeTeam = homeTeamElement ? homeTeamElement.textContent.trim() : '';
+                        
+                        // Extract away team
+                        const awayTeamElement = row.querySelector('.awayTeam');
+                        const awayTeam = awayTeamElement ? awayTeamElement.textContent.trim() : '';
+                        
+                        // Extract prediction
+                        const predictionElement = row.querySelector('.forepr span');
+                        const prediction = predictionElement ? predictionElement.textContent.trim() : '';
+                        
+                        // Extract score prediction
+                        const scoreElement = row.querySelector('.scrmobpred.ex_sc');
+                        let scorePrediction = '';
+                        if (scoreElement) {
+                            scorePrediction = scoreElement.textContent.trim()
+                                .replace(/[\n\t]/g, '') // Remove newlines and tabs
+                                .replace(/\s+/g, ' ');  // Collapse multiple spaces
+                        }
+                        
+                        // Split score prediction into home and away goals
+                        let homeGoals = '';
+                        let awayGoals = '';
+                        if (scorePrediction.includes('-')) {
+                            const parts = scorePrediction.split('-');
+                            if (parts.length === 2) {
+                                homeGoals = parts[0].trim();
+                                awayGoals = parts[1].trim();
+                            }
+                        }
+                        
+                        // Add to data array if we have all required fields
+                        if (time && homeTeam && awayTeam && (prediction || scorePrediction)) {
+                            data.push({
+                                time,
+                                homeTeam,
+                                awayTeam,
+                                prediction,
+                                scorePrediction,
+                                homeGoals,
+                                awayGoals
+                            });
+                        }
+                    });
+                    
+                    // Generate CSV content
+                    let csvContent = 'Time,Home Team,Away Team,Prediction,Score Prediction,Home Goals,Away Goals\n';
+                    
+                    data.forEach(row => {
+                        csvContent += `"${row.time}","${row.homeTeam}","${row.awayTeam}","${row.prediction}","${row.scorePrediction}","${row.homeGoals}","${row.awayGoals}"\n`;
+                    });
+                    
+                    // Create preview table
+                    if (data.length > 0) {
+                        let previewHTML = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Home Team</th>
+                                        <th>Away Team</th>
+                                        <th>Prediction</th>
+                                        <th>Score Prediction</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        // Show first 5 rows in preview
+                        const previewRows = data.slice(0, 5);
+                        previewRows.forEach(row => {
+                            previewHTML += `
+                                <tr>
+                                    <td>${row.time}</td>
+                                    <td>${row.homeTeam}</td>
+                                    <td>${row.awayTeam}</td>
+                                    <td>${row.prediction}</td>
+                                    <td>${row.scorePrediction}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        previewHTML += `
+                                </tbody>
+                            </table>
+                            <p>Showing ${previewRows.length} of ${data.length} matches found.</p>
+                        `;
+                        
+                        tablePreview.innerHTML = previewHTML;
+                    } else {
+                        tablePreview.innerHTML = '<p>No match data found in the HTML file.</p>';
+                    }
+                    
+                    // Download CSV file
+                    const today = new Date();
+                    const dateStr = today.toISOString().split('T')[0];
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', `FOREBET_${dateStr}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    statusDisplay.textContent = `Successfully converted ${data.length} matches to CSV.`;
+                    statusDisplay.className = 'status success';
+                } catch (error) {
+                    console.error('Error converting file:', error);
+                    statusDisplay.textContent = 'Error converting file. Please check the console for details.';
+                    statusDisplay.className = 'status error';
+                    tablePreview.innerHTML = '<p>Error processing file.</p>';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

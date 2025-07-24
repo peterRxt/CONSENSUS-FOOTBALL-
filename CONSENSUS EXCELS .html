@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Prediction Consensus Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3f51b5;
+            --primary-dark: #303f9f;
+            --secondary: #ff5722;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --light: #f5f5f5;
+            --dark: #212121;
+            --gray: #757575;
+            --light-gray: #e0e0e0;
+            --white: #ffffff;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f8f9fa;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 20px 0;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 400;
+        }
+        
+        .card {
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            padding: 25px;
+            margin-bottom: 25px;
+            transition: var(--transition);
+        }
+        
+        .card:hover {
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+        }
+        
+        h2 .badge {
+            margin-left: 10px;
+            background-color: var(--primary);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .upload-section {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .file-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .file-input {
+            position: relative;
+        }
+        
+        .file-input label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--gray);
+        }
+        
+        .file-input input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--light-gray);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+        
+        .file-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--primary);
+            color: var(--white);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: var(--transition);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn:disabled {
+            background-color: var(--light-gray);
+            color: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: var(--light-gray);
+            border-radius: 6px;
+            margin: 20px 0;
+            height: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 6px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--light-gray);
+            margin-bottom: 20px;
+            overflow-x: auto;
+            scrollbar-width: none; /* Firefox */
+        }
+        
+        .tabs::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+        
+        .tab-btn {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--gray);
+            position: relative;
+            white-space: nowrap;
+            transition: var(--transition);
+        }
+        
+        .tab-btn.active {
+            color: var(--primary);
+        }
+        
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary);
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background-color: var(--white);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            transition: var(--transition);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card h3 {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--gray);
+            margin-bottom: 8px;
+        }
+        
+        .stat-card p {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .stat-card .secondary {
+            color: var(--secondary);
+        }
+        
+        .stat-card .success {
+            color: var(--success);
+        }
+        
+        .stat-card .warning {
+            color: var(--warning);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+        
+        th {
+            background-color: var(--primary);
+            color: var(--white);
+            font-weight: 500;
+            padding: 12px 15px;
+            text-align: left;
+        }
+        
+        th:first-child {
+            border-top-left-radius: 8px;
+        }
+        
+        th:last-child {
+            border-top-right-radius: 8px;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--light-gray);
+            vertical-align: middle;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tr:hover {
+            background-color: rgba(63, 81, 181, 0.05);
+        }
+        
+        .match-row {
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .match-row:hover {
+            background-color: rgba(63, 81, 181, 0.05);
+        }
+        
+        .highlight {
+            background-color: rgba(76, 175, 80, 0.1);
+        }
+        
+        .goal-display {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            background-color: rgba(63, 81, 181, 0.1);
+            color: var(--primary);
+        }
+        
+        .home-win {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--success);
+        }
+        
+        .away-win {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: var(--danger);
+        }
+        
+        .draw {
+            background-color: rgba(255, 152, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+        }
+        
+        .filter-group label {
+            margin-right: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--gray);
+        }
+        
+        .filter-group select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--light-gray);
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+        
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
+        }
+        
+        .sources-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .source-badge {
+            background-color: var(--light-gray);
+            color: var(--gray);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--light-gray);
+            margin-bottom: 15px;
+        }
+        
+        .empty-state p {
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .file-inputs {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            th, td {
+                padding: 10px 12px;
+                font-size: 0.85rem;
+            }
+            
+            .tab-btn {
+                padding: 10px 15px;
+                font-size: 0.85rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            h2 {
+                font-size: 1.2rem;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .filter-group {
+                width: 100%;
+            }
+            
+            .filter-group select {
+                width: 100%;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Football Prediction Consensus Analyzer</h1>
+            <p class="subtitle">Combine multiple prediction sources to find the safest bets</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="card upload-section">
+            <h2><i class="fas fa-upload"></i> Upload Prediction Files</h2>
+            <div class="file-inputs">
+                <div class="file-input">
+                    <label for="file1">Source 1 (CSV)</label>
+                    <input type="file" id="file1" accept=".csv">
+                </div>
+                <div class="file-input">
+                    <label for="file2">Source 2 (CSV)</label>
+                    <input type="file" id="file2" accept=".csv">
+                </div>
+                <div class="file-input">
+                    <label for="file3">Source 3 (CSV)</label>
+                    <input type="file" id="file3" accept=".csv">
+                </div>
+                <div class="file-input">
+                    <label for="file4">Source 4 (CSV)</label>
+                    <input type="file" id="file4" accept=".csv">
+                </div>
+                <div class="file-input">
+                    <label for="file5">Source 5 (CSV)</label>
+                    <input type="file" id="file5" accept=".csv">
+                </div>
+            </div>
+            <button id="analyze-btn" class="btn"><i class="fas fa-chart-bar"></i> Analyze Files</button>
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+        
+        <div class="results">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="stage1"><i class="fas fa-filter"></i> Common Matches</button>
+                <button class="tab-btn" data-tab="stage2"><i class="fas fa-check-circle"></i> Consensus</button>
+                <button class="tab-btn" data-tab="stage3"><i class="fas fa-shield-alt"></i> Safest Bets</button>
+            </div>
+            
+            <div id="stage1" class="tab-content active">
+                <div class="card">
+                    <h2>Common Matches <span class="badge">Appearing in ≥3 Sources</span></h2>
+                    <div class="stats">
+                        <div class="stat-card">
+                            <h3>Total Matches</h3>
+                            <p id="total-matches">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Average Sources</h3>
+                            <p id="avg-sources">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Most Common Match</h3>
+                            <p id="common-match">-</p>
+                        </div>
+                    </div>
+                    
+                    <div style="overflow-x: auto;">
+                        <table id="stage1-table">
+                            <thead>
+                                <tr>
+                                    <th>Match</th>
+                                    <th>Sources</th>
+                                    <th>Predictions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stage1-results">
+                                <tr>
+                                    <td colspan="3" class="empty-state">
+                                        <i class="fas fa-futbol"></i>
+                                        <p>Upload and analyze CSV files to see common matches</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="stage2" class="tab-content">
+                <div class="card">
+                    <h2>Consensus Predictions</h2>
+                    <div class="stats">
+                        <div class="stat-card">
+                            <h3>Consensus Matches</h3>
+                            <p id="consensus-count">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Home Wins</h3>
+                            <p id="home-wins" class="success">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Away Wins</h3>
+                            <p id="away-wins" class="danger">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Draws</h3>
+                            <p id="draws" class="warning">0</p>
+                        </div>
+                    </div>
+                    
+                    <div style="overflow-x: auto;">
+                        <table id="stage2-table">
+                            <thead>
+                                <tr>
+                                    <th>Match</th>
+                                    <th>Prediction</th>
+                                    <th>Consensus</th>
+                                    <th>Sources</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stage2-results">
+                                <tr>
+                                    <td colspan="4" class="empty-state">
+                                        <i class="fas fa-futbol"></i>
+                                        <p>No consensus predictions found yet</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="stage3" class="tab-content">
+                <div class="card">
+                    <h2>Safest Predictions</h2>
+                    <div class="filter-controls">
+                        <div class="filter-group">
+                            <label for="goal-difference"><i class="fas fa-filter"></i> Min Goal Difference:</label>
+                            <select id="goal-difference">
+                                <option value="1">1+ Goals</option>
+                                <option value="2" selected>2+ Goals</option>
+                                <option value="3">3+ Goals</option>
+                                <option value="4">4+ Goals</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="stats">
+                        <div class="stat-card">
+                            <h3>Safe Predictions</h3>
+                            <p id="safe-count">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Highest GD</h3>
+                            <p id="highest-gd" class="secondary">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Avg. GD</h3>
+                            <p id="avg-gd" class="secondary">0</p>
+                        </div>
+                    </div>
+                    
+                    <div style="overflow-x: auto;">
+                        <table id="stage3-table">
+                            <thead>
+                                <tr>
+                                    <th>Match</th>
+                                    <th>Prediction</th>
+                                    <th>Goal Diff</th>
+                                    <th>Sources</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stage3-results">
+                                <tr>
+                                    <td colspan="4" class="empty-state">
+                                        <i class="fas fa-futbol"></i>
+                                        <p>No safe predictions found yet</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let allMatches = [];
+        let consensusMatches = [];
+        let safePredictions = [];
+        
+        // DOM elements
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        // Tab functionality
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.getAttribute('data-tab');
+                
+                // Update active tab button
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Update active tab content
+                tabContents.forEach(content => content.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Fuzzy matching function
+        function fuzzyMatch(str1, str2) {
+            const cleanStr1 = str1.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const cleanStr2 = str2.toLowerCase().replace(/[^a-z0-9]/g, '');
+            
+            // Exact match after cleaning
+            if (cleanStr1 === cleanStr2) return true;
+            
+            // Contains match
+            if (cleanStr1.includes(cleanStr2)) return true;
+            if (cleanStr2.includes(cleanStr1)) return true;
+            
+            // Common abbreviations
+            const abbreviations = {
+                'united': 'utd',
+                'football': 'fc',
+                'club': 'c',
+                'sporting': 'sp',
+                'athletic': 'ath',
+                'association': 'as',
+                'wanderers': 'wds'
+            };
+            
+            let modifiedStr1 = cleanStr1;
+            let modifiedStr2 = cleanStr2;
+            
+            for (const [full, abbrev] of Object.entries(abbreviations)) {
+                modifiedStr1 = modifiedStr1.replace(full, abbrev);
+                modifiedStr2 = modifiedStr2.replace(full, abbrev);
+            }
+            
+            return modifiedStr1 === modifiedStr2;
+        }
+        
+        // Parse CSV file
+        function parseCSV(file, index) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    const lines = content.split('\n');
+                    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                    
+                    const matches = [];
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        if (!lines[i].trim()) continue;
+                        
+                        const values = lines[i].split(',');
+                        const match = {};
+                        
+                        for (let j = 0; j < headers.length; j++) {
+                            let value = values[j] ? values[j].trim().replace(/"/g, '') : '';
+                            
+                            // Handle prediction/score format (1-0, 1:0, 2-1, etc.)
+                            if (headers[j].toLowerCase().includes('prediction') || 
+                                headers[j].toLowerCase().includes('score')) {
+                                value = value.replace(':', '-');
+                            }
+                            
+                            match[headers[j]] = value;
+                        }
+                        
+                        // Standardize team names
+                        if (match['Home Team'] && match['Away Team']) {
+                            match['Home Team'] = match['Home Team'].replace(/ FC$| Club$| Team$/, '').trim();
+                            match['Away Team'] = match['Away Team'].replace(/ FC$| Club$| Team$/, '').trim();
+                        }
+                        
+                        matches.push({
+                            ...match,
+                            source: `Source ${index + 1}`
+                        });
+                    }
+                    
+                    resolve(matches);
+                };
+                
+                reader.onerror = reject;
+                reader.readAsText(file);
+            });
+        }
+        
+        // Find similar matches across all files
+        function findSimilarMatches(allFileMatches) {
+            const allMatches = [];
+            const matchGroups = [];
+            
+            // Flatten all matches from all files
+            allFileMatches.forEach((fileMatches, fileIndex) => {
+                fileMatches.forEach(match => {
+                    allMatches.push({
+                        ...match,
+                        fileIndex
+                    });
+                });
+            });
+            
+            // Group similar matches
+            for (let i = 0; i < allMatches.length; i++) {
+                const currentMatch = allMatches[i];
+                let foundGroup = false;
+                
+                // Check if this match belongs to any existing group
+                for (const group of matchGroups) {
+                    const groupMatch = group.matches[0];
+                    
+                    // Fuzzy match for teams
+                    const homeMatch = fuzzyMatch(currentMatch['Home Team'], groupMatch['Home Team']);
+                    const awayMatch = fuzzyMatch(currentMatch['Away Team'], groupMatch['Away Team']);
+                    
+                    if (homeMatch && awayMatch) {
+                        group.matches.push(currentMatch);
+                        foundGroup = true;
+                        break;
+                    }
+                }
+                
+                // If no group found, create a new one
+                if (!foundGroup) {
+                    matchGroups.push({
+                        key: `${currentMatch['Home Team']} vs ${currentMatch['Away Team']}`,
+                        matches: [currentMatch]
+                    });
+                }
+            }
+            
+            // Filter groups with at least 3 matches from different sources
+            const filteredGroups = matchGroups.filter(group => {
+                const uniqueSources = new Set(group.matches.map(m => m.fileIndex));
+                return uniqueSources.size >= 3;
+            });
+            
+            // Prepare the result
+            const result = filteredGroups.map(group => {
+                const sources = [...new Set(group.matches.map(m => m.source))];
+                const predictions = group.matches.map(m => {
+                    const pred = m['Prediction'] || m['Score Prediction'] || m['Correct Score'] || '';
+                    return {
+                        prediction: pred,
+                        source: m.source
+                    };
+                });
+                
+                // Determine the most common team names
+                const homeTeamCounts = {};
+                const awayTeamCounts = {};
+                
+                group.matches.forEach(m => {
+                    homeTeamCounts[m['Home Team']] = (homeTeamCounts[m['Home Team']] || 0) + 1;
+                    awayTeamCounts[m['Away Team']] = (awayTeamCounts[m['Away Team']] || 0) + 1;
+                });
+                
+                const homeTeam = Object.entries(homeTeamCounts).sort((a, b) => b[1] - a[1])[0][0];
+                const awayTeam = Object.entries(awayTeamCounts).sort((a, b) => b[1] - a[1])[0][0];
+                
+                return {
+                    match: `${homeTeam} vs ${awayTeam}`,
+                    homeTeam,
+                    awayTeam,
+                    sources,
+                    sourceCount: sources.length,
+                    predictions,
+                    allMatches: group.matches
+                };
+            });
+            
+            // Sort by number of sources (descending)
+            return result.sort((a, b) => b.sourceCount - a.sourceCount);
+        }
+        
+        // Find consensus predictions
+        function findConsensusPredictions(commonMatches) {
+            return commonMatches.map(match => {
+                const predictionCounts = {};
+                
+                // Count each prediction
+                match.predictions.forEach(p => {
+                    if (p.prediction) {
+                        predictionCounts[p.prediction] = (predictionCounts[p.prediction] || 0) + 1;
+                    }
+                });
+                
+                // Find the most common prediction
+                const sortedPredictions = Object.entries(predictionCounts).sort((a, b) => b[1] - a[1]);
+                const mostCommonPrediction = sortedPredictions[0]?.[0] || '';
+                const consensusCount = sortedPredictions[0]?.[1] || 0;
+                
+                // Parse the prediction
+                const [homeGoals, awayGoals] = mostCommonPrediction.split('-').map(Number);
+                const isHomeWin = homeGoals > awayGoals;
+                const isAwayWin = awayGoals > homeGoals;
+                const isDraw = homeGoals === awayGoals;
+                const goalDifference = Math.abs(homeGoals - awayGoals);
+                
+                // Format the prediction for display
+                let predictionDisplay = mostCommonPrediction;
+                let predictionClass = '';
+                
+                if (isHomeWin) {
+                    predictionClass = 'home-win';
+                    predictionDisplay = `${homeGoals}:${awayGoals} (Home Win)`;
+                } else if (isAwayWin) {
+                    predictionClass = 'away-win';
+                    predictionDisplay = `${homeGoals}:${awayGoals} (Away Win)`;
+                } else if (isDraw) {
+                    predictionClass = 'draw';
+                    predictionDisplay = `${homeGoals}:${awayGoals} (Draw)`;
+                }
+                
+                return {
+                    ...match,
+                    consensusPrediction: mostCommonPrediction,
+                    consensusCount,
+                    isHomeWin,
+                    isAwayWin,
+                    isDraw,
+                    homeGoals,
+                    awayGoals,
+                    goalDifference,
+                    predictionDisplay,
+                    predictionClass
+                };
+            }).filter(match => {
+                // Only include matches with clear consensus
+                return match.consensusPrediction && match.consensusCount >= 2;
+            });
+        }
+        
+        // Find safest predictions
+        function findSafestPredictions(consensusMatches) {
+            return consensusMatches
+                .filter(match => match.goalDifference >= 2) // At least 2 goal difference
+                .sort((a, b) => b.goalDifference - a.goalDifference);
+        }
+        
+        // Update stage 1 results
+        function updateStage1Results(matches) {
+            const tbody = document.getElementById('stage1-results');
+            tbody.innerHTML = '';
+            
+            if (matches.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="empty-state">
+                            <i class="fas fa-futbol"></i>
+                            <p>No common matches found across 3+ sources</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let totalSources = 0;
+            let mostCommonMatch = '';
+            let maxSources = 0;
+            
+            matches.forEach(match => {
+                totalSources += match.sourceCount;
+                
+                if (match.sourceCount > maxSources) {
+                    maxSources = match.sourceCount;
+                    mostCommonMatch = match.match;
+                }
+                
+                const row = document.createElement('tr');
+                row.className = 'match-row';
+                row.innerHTML = `
+                    <td>${match.match}</td>
+                    <td>
+                        <div class="sources-list">
+                            ${match.sources.map(s => `<span class="source-badge">${s}</span>`).join('')}
+                        </div>
+                    </td>
+                    <td>${match.predictions.map(p => `${p.prediction || '-'} (${p.source})`).join(', ')}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Update stats
+            document.getElementById('total-matches').textContent = matches.length;
+            document.getElementById('avg-sources').textContent = matches.length > 0 ? (totalSources / matches.length).toFixed(1) : '0';
+            document.getElementById('common-match').textContent = mostCommonMatch || '-';
+        }
+        
+        // Update stage 2 results
+        function updateStage2Results(matches) {
+            const tbody = document.getElementById('stage2-results');
+            tbody.innerHTML = '';
+            
+            if (matches.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="empty-state">
+                            <i class="fas fa-futbol"></i>
+                            <p>No consensus predictions found yet</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let homeWins = 0;
+            let awayWins = 0;
+            let draws = 0;
+            
+            matches.forEach(match => {
+                if (match.isHomeWin) homeWins++;
+                if (match.isAwayWin) awayWins++;
+                if (match.isDraw) draws++;
+                
+                const row = document.createElement('tr');
+                row.className = 'match-row';
+                row.innerHTML = `
+                    <td>${match.match}</td>
+                    <td><span class="goal-display ${match.predictionClass}">${match.predictionDisplay}</span></td>
+                    <td>${match.consensusCount}/${match.sourceCount} sources</td>
+                    <td>
+                        <div class="sources-list">
+                            ${match.sources.map(s => `<span class="source-badge">${s}</span>`).join('')}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Update stats
+            document.getElementById('consensus-count').textContent = matches.length;
+            document.getElementById('home-wins').textContent = homeWins;
+            document.getElementById('away-wins').textContent = awayWins;
+            document.getElementById('draws').textContent = draws;
+        }
+        
+        // Update stage 3 results
+        function updateStage3Results(matches, minGoalDiff = 2) {
+            const filteredMatches = matches.filter(m => m.goalDifference >= minGoalDiff);
+            const tbody = document.getElementById('stage3-results');
+            tbody.innerHTML = '';
+            
+            if (filteredMatches.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="empty-state">
+                            <i class="fas fa-futbol"></i>
+                            <p>No safe predictions found with ${minGoalDiff}+ goal difference</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let totalGD = 0;
+            let highestGD = 0;
+            
+            filteredMatches.forEach(match => {
+                totalGD += match.goalDifference;
+                if (match.goalDifference > highestGD) {
+                    highestGD = match.goalDifference;
+                }
+                
+                const row = document.createElement('tr');
+                row.className = 'match-row';
+                if (match.goalDifference >= 3) {
+                    row.classList.add('highlight');
+                }
+                row.innerHTML = `
+                    <td>${match.match}</td>
+                    <td><span class="goal-display ${match.predictionClass}">${match.predictionDisplay}</span></td>
+                    <td>${match.goalDifference}</td>
+                    <td>
+                        <div class="sources-list">
+                            ${match.sources.map(s => `<span class="source-badge">${s}</span>`).join('')}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Update stats
+            document.getElementById('safe-count').textContent = filteredMatches.length;
+            document.getElementById('highest-gd').textContent = highestGD;
+            document.getElementById('avg-gd').textContent = filteredMatches.length > 0 ? (totalGD / filteredMatches.length).toFixed(1) : '0';
+        }
+        
+        // Filter by goal difference
+        function filterByGoalDifference() {
+            const minGoalDiff = parseInt(document.getElementById('goal-difference').value);
+            updateStage3Results(safePredictions, minGoalDiff);
+        }
+        
+        // Main analyze function
+        analyzeBtn.addEventListener('click', async function() {
+            const fileInputs = [
+                document.getElementById('file1'),
+                document.getElementById('file2'),
+                document.getElementById('file3'),
+                document.getElementById('file4'),
+                document.getElementById('file5')
+            ];
+            
+            const files = fileInputs.map(input => input.files[0]).filter(Boolean);
+            
+            if (files.length < 3) {
+                alert('Please upload at least 3 CSV files for analysis.');
+                return;
+            }
+            
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            progressBar.style.width = '0%';
+            
+            try {
+                // Parse all files
+                const parsePromises = files.map((file, index) => parseCSV(file, index));
+                const allFileMatches = await Promise.all(parsePromises);
+                progressBar.style.width = '30%';
+                
+                // Stage 1: Find common matches
+                allMatches = findSimilarMatches(allFileMatches);
+                updateStage1Results(allMatches);
+                progressBar.style.width = '60%';
+                
+                // Stage 2: Find consensus predictions
+                consensusMatches = findConsensusPredictions(allMatches);
+                updateStage2Results(consensusMatches);
+                progressBar.style.width = '80%';
+                
+                // Stage 3: Find safest predictions
+                safePredictions = findSafestPredictions(consensusMatches);
+                updateStage3Results(safePredictions);
+                progressBar.style.width = '100%';
+                
+                // Enable tab navigation if it was hidden
+                document.querySelector('.tabs').style.display = 'flex';
+                
+            } catch (error) {
+                console.error('Error analyzing files:', error);
+                alert('An error occurred while analyzing the files. Please check the console for details.');
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = '<i class="fas fa-chart-bar"></i> Analyze Files';
+                
+                // Auto-scroll to results after analysis
+                setTimeout(() => {
+                    document.querySelector('.results').scrollIntoView({ behavior: 'smooth' });
+                }, 300);
+            }
+        });
+        
+        // Initialize goal difference filter
+        document.getElementById('goal-difference').addEventListener('change', filterByGoalDifference);
+    </script>
+</body>
+</html>

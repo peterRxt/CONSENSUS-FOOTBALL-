@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Super Tips Parser</title>
+    <style>
+        body {
+            font-family: 'Open Sans', Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .upload-container {
+            border: 2px dashed #3498db;
+            border-radius: 5px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            background-color: #f8f9fa;
+        }
+        .upload-container.drag-over {
+            background-color: #e8f4fc;
+            border-color: #2980b9;
+        }
+        #file-input {
+            display: none;
+        }
+        .upload-btn {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .upload-btn:hover {
+            background-color: #2980b9;
+        }
+        .results {
+            margin-top: 30px;
+            display: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .export-btn {
+            background-color: #27ae60;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .export-btn:hover {
+            background-color: #219653;
+        }
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .file-info {
+            margin-top: 15px;
+            font-style: italic;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Football Super Tips Parser</h1>
+    
+    <div class="upload-container" id="drop-area">
+        <p>Drag & drop your Football Super Tips HTML file here or</p>
+        <input type="file" id="file-input" accept=".html,.htm">
+        <button class="upload-btn" onclick="document.getElementById('file-input').click()">Select File</button>
+        <div class="file-info" id="file-info"></div>
+    </div>
+    
+    <div class="results" id="results">
+        <h2>Extracted Matches</h2>
+        <div id="match-count"></div>
+        <div class="table-container">
+            <table id="matches-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Home Team</th>
+                        <th>Away Team</th>
+                        <th>Prediction</th>
+                    </tr>
+                </thead>
+                <tbody id="matches-body">
+                </tbody>
+            </table>
+        </div>
+        <button class="export-btn" id="export-btn">Export to CSV</button>
+    </div>
+    
+    <div class="status" id="status"></div>
+    
+    <script>
+        // DOM elements
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('file-input');
+        const fileInfo = document.getElementById('file-info');
+        const resultsDiv = document.getElementById('results');
+        const matchesBody = document.getElementById('matches-body');
+        const matchCount = document.getElementById('match-count');
+        const exportBtn = document.getElementById('export-btn');
+        const statusDiv = document.getElementById('status');
+        
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        // Highlight drop area when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        // Handle dropped files
+        dropArea.addEventListener('drop', handleDrop, false);
+        
+        // Handle selected files
+        fileInput.addEventListener('change', handleFiles, false);
+        
+        // Export button click handler
+        exportBtn.addEventListener('click', exportToCSV, false);
+        
+        // Array to store parsed matches
+        let matches = [];
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        function highlight() {
+            dropArea.classList.add('drag-over');
+        }
+        
+        function unhighlight() {
+            dropArea.classList.remove('drag-over');
+        }
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles({target: {files: files}});
+        }
+        
+        function handleFiles(e) {
+            const files = e.target.files;
+            if (files.length === 0) return;
+            
+            const file = files[0];
+            fileInfo.textContent = `File selected: ${file.name}`;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    parseHTML(content);
+                    showStatus('File processed successfully!', 'success');
+                } catch (error) {
+                    showStatus(`Error processing file: ${error.message}`, 'error');
+                    console.error(error);
+                }
+            };
+            reader.onerror = function() {
+                showStatus('Error reading file', 'error');
+            };
+            reader.readAsText(file);
+        }
+        
+        function parseHTML(htmlContent) {
+            // Clear previous results
+            matches = [];
+            matchesBody.innerHTML = '';
+            
+            // Create a DOM parser
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlContent, 'text/html');
+            
+            // Find all poolList items
+            const poolLists = doc.querySelectorAll('.poolList');
+            
+            poolLists.forEach(poolList => {
+                try {
+                    // Extract match data
+                    const homeDisp = poolList.querySelector('.homedisp');
+                    const awayDisp = poolList.querySelector('.awaydisp');
+                    const dateDisp = poolList.querySelector('.datedisp');
+                    const predResults = poolList.querySelector('.prediresults');
+                    
+                    if (homeDisp && awayDisp && dateDisp && predResults) {
+                        const match = {
+                            time: dateDisp.textContent.trim(),
+                            homeTeam: homeDisp.textContent.trim(),
+                            awayTeam: awayDisp.textContent.trim(),
+                            prediction: predResults.textContent.trim()
+                        };
+                        
+                        matches.push(match);
+                    }
+                } catch (error) {
+                    console.error('Error parsing match:', error);
+                }
+            });
+            
+            // Display the matches
+            displayMatches();
+        }
+        
+        function displayMatches() {
+            if (matches.length === 0) {
+                showStatus('No matches found in the file.', 'error');
+                resultsDiv.style.display = 'none';
+                return;
+            }
+            
+            matchCount.textContent = `Found ${matches.length} matches`;
+            
+            matches.forEach(match => {
+                const row = document.createElement('tr');
+                
+                const timeCell = document.createElement('td');
+                timeCell.textContent = match.time;
+                row.appendChild(timeCell);
+                
+                const homeCell = document.createElement('td');
+                homeCell.textContent = match.homeTeam;
+                row.appendChild(homeCell);
+                
+                const awayCell = document.createElement('td');
+                awayCell.textContent = match.awayTeam;
+                row.appendChild(awayCell);
+                
+                const predCell = document.createElement('td');
+                predCell.textContent = match.prediction;
+                row.appendChild(predCell);
+                
+                matchesBody.appendChild(row);
+            });
+            
+            resultsDiv.style.display = 'block';
+        }
+        
+        function exportToCSV() {
+            if (matches.length === 0) {
+                showStatus('No matches to export', 'error');
+                return;
+            }
+            
+            try {
+                // Get current date for filename
+                const today = new Date();
+                const dateStr = today.toISOString().split('T')[0];
+                
+                // Create CSV content
+                let csvContent = "Time,Home Team,Away Team,Prediction\n";
+                
+                matches.forEach(match => {
+                    csvContent += `"${match.time}","${match.homeTeam}","${match.awayTeam}","${match.prediction}"\n`;
+                });
+                
+                // Create download link
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', `FStips_${dateStr}.csv`);
+                link.style.visibility = 'hidden';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showStatus('CSV exported successfully!', 'success');
+            } catch (error) {
+                showStatus(`Error exporting CSV: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+        
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+            statusDiv.style.display = 'block';
+            
+            // Hide status after 5 seconds
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Predictions Filter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        
+        .upload-section {
+            border: 2px dashed #3498db;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            background-color: #f8fafc;
+        }
+        
+        .filter-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #eaf2f8;
+            border-radius: 5px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .results {
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .match-category {
+            background-color: #2c3e50;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .gd-3plus {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .gd-2plus {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .caption {
+            font-style: italic;
+            margin-bottom: 20px;
+            color: #7f8c8d;
+        }
+        
+        .export-buttons {
+            margin-top: 20px;
+        }
+        
+        .canvas-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        canvas {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Football Predictions Filter</h1>
+        <p class="caption">Matches fetched from <a href="https://onemillionpredictions.com/wednesday-football-predictions/correct-score/" target="_blank">One Million Predictions</a></p>
+        
+        <div class="upload-section">
+            <h2>Upload Prediction File</h2>
+            <p>Upload an HTML file from One Million Predictions website</p>
+            <input type="file" id="fileInput" accept=".html,.htm">
+            <p><small>Example file: <a href="https://onemillionpredictions.com/wednesday-football-predictions/correct-score/" target="_blank">Wednesday Correct Score Predictions</a></small></p>
+        </div>
+        
+        <div class="loading" id="loadingIndicator">
+            <div class="loading-spinner"></div>
+            <p>Processing file...</p>
+        </div>
+        
+        <div class="filter-section">
+            <h2>Filter Options</h2>
+            <div>
+                <button id="filter3Plus" disabled>Show 3+ Goal Difference</button>
+                <button id="filter2Plus" disabled>Show 2+ Goal Difference</button>
+                <button id="showAll" disabled>Show All Matches</button>
+            </div>
+        </div>
+        
+        <div class="export-buttons">
+            <button id="exportPNG" disabled>Export Filtered to PNG</button>
+            <button id="exportCSV" disabled>Export All to CSV</button>
+        </div>
+        
+        <div class="results">
+            <h2>Results</h2>
+            <div id="resultsCount"></div>
+            <div id="resultsTable"></div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="exportCanvas"></canvas>
+        </div>
+    </div>
+
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('fileInput');
+            const filter3Plus = document.getElementById('filter3Plus');
+            const filter2Plus = document.getElementById('filter2Plus');
+            const showAll = document.getElementById('showAll');
+            const exportPNG = document.getElementById('exportPNG');
+            const exportCSV = document.getElementById('exportCSV');
+            const resultsTable = document.getElementById('resultsTable');
+            const resultsCount = document.getElementById('resultsCount');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const exportCanvas = document.getElementById('exportCanvas');
+            
+            let allMatches = [];
+            let filteredMatches = [];
+            
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                loadingIndicator.style.display = 'block';
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    parseHTML(content);
+                    loadingIndicator.style.display = 'none';
+                };
+                reader.readAsText(file);
+            });
+            
+            function parseHTML(html) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Find the table with predictions
+                const tables = doc.querySelectorAll('table');
+                let predictionTable = null;
+                
+                for (const table of tables) {
+                    if (table.querySelector('th:nth-child(3)') && 
+                        table.querySelector('th:nth-child(3)').textContent.includes('Correct Score')) {
+                        predictionTable = table;
+                        break;
+                    }
+                }
+                
+                if (!predictionTable) {
+                    alert('Could not find predictions table in the uploaded file.');
+                    return;
+                }
+                
+                allMatches = [];
+                let currentCompetition = '';
+                
+                const rows = predictionTable.querySelectorAll('tr');
+                rows.forEach(row => {
+                    // Check if this is a competition header row
+                    if (row.querySelector('td[colspan="2"]')) {
+                        currentCompetition = row.querySelector('td').textContent.trim();
+                        return;
+                    }
+                    
+                    // Skip header rows
+                    if (row.querySelector('th')) {
+                        return;
+                    }
+                    
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length >= 4) {
+                        const time = cells[0].textContent.trim();
+                        const teams = cells[1].textContent.trim();
+                        const score = cells[2].textContent.trim();
+                        const odds = cells[3].textContent.trim();
+                        
+                        // Split teams and score
+                        const [homeTeam, awayTeam] = teams.split('\n');
+                        const [homeGoals, awayGoals] = score.split(':').map(Number);
+                        
+                        if (!isNaN(homeGoals) && !isNaN(awayGoals)) {
+                            const goalDifference = Math.abs(homeGoals - awayGoals);
+                            
+                            allMatches.push({
+                                competition: currentCompetition,
+                                time,
+                                homeTeam: homeTeam.trim(),
+                                awayTeam: awayTeam ? awayTeam.trim() : '',
+                                score,
+                                homeGoals,
+                                awayGoals,
+                                goalDifference,
+                                odds
+                            });
+                        }
+                    }
+                });
+                
+                // Enable buttons
+                filter3Plus.disabled = false;
+                filter2Plus.disabled = false;
+                showAll.disabled = false;
+                exportPNG.disabled = false;
+                exportCSV.disabled = false;
+                
+                // Show all matches by default
+                showAllMatches();
+            }
+            
+            function filterMatches(minGoalDifference) {
+                filteredMatches = allMatches.filter(match => match.goalDifference >= minGoalDifference);
+                displayMatches(filteredMatches);
+            }
+            
+            function showAllMatches() {
+                filteredMatches = [...allMatches];
+                displayMatches(filteredMatches);
+            }
+            
+            function displayMatches(matches) {
+                if (matches.length === 0) {
+                    resultsTable.innerHTML = '<p>No matches found matching the selected criteria.</p>';
+                    resultsCount.textContent = '0 matches found';
+                    exportPNG.disabled = true;
+                    return;
+                }
+                
+                exportPNG.disabled = false;
+                
+                let html = '<table>';
+                html += '<thead><tr><th>Time</th><th>Competition</th><th>Match</th><th>Prediction</th><th>GD</th><th>Odds</th></tr></thead><tbody>';
+                
+                let currentCompetition = '';
+                
+                matches.forEach(match => {
+                    // Add competition header if it's different from previous
+                    if (match.competition !== currentCompetition) {
+                        currentCompetition = match.competition;
+                        html += `<tr class="match-category"><td colspan="6">${currentCompetition}</td></tr>`;
+                    }
+                    
+                    // Determine row class based on goal difference
+                    let rowClass = '';
+                    if (match.goalDifference >= 3) {
+                        rowClass = 'gd-3plus';
+                    } else if (match.goalDifference >= 2) {
+                        rowClass = 'gd-2plus';
+                    }
+                    
+                    html += `<tr class="${rowClass}">`;
+                    html += `<td>${match.time}</td>`;
+                    html += `<td>${match.competition}</td>`;
+                    html += `<td>${match.homeTeam} vs ${match.awayTeam}</td>`;
+                    html += `<td>${match.score}</td>`;
+                    html += `<td>${match.goalDifference}</td>`;
+                    html += `<td>${match.odds}</td>`;
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table>';
+                resultsTable.innerHTML = html;
+                resultsCount.textContent = `${matches.length} matches found`;
+            }
+            
+            function exportToCSV() {
+                if (allMatches.length === 0) return;
+                
+                let csv = 'Time,Competition,Home Team,Away Team,Correct Score,Goal Difference,Odds\n';
+                
+                allMatches.forEach(match => {
+                    csv += `"${match.time}","${match.competition}","${match.homeTeam}","${match.awayTeam}","${match.score}",${match.goalDifference},"${match.odds}"\n`;
+                });
+                
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'football_predictions.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            
+            function exportToPNG() {
+                if (filteredMatches.length === 0) return;
+                
+                // Create a temporary div for the PNG content
+                const pngContent = document.createElement('div');
+                pngContent.style.backgroundColor = 'white';
+                pngContent.style.padding = '20px';
+                pngContent.style.maxWidth = '800px';
+                pngContent.style.margin = '0 auto';
+                
+                // Add title and date
+                const now = new Date();
+                const title = document.createElement('h2');
+                title.textContent = 'Football Predictions with High Goal Difference';
+                title.style.textAlign = 'center';
+                title.style.color = '#2c3e50';
+                title.style.marginBottom = '10px';
+                pngContent.appendChild(title);
+                
+                const subtitle = document.createElement('p');
+                subtitle.textContent = `Generated on ${now.toLocaleDateString()} at ${now.toLocaleTimeString()}`;
+                subtitle.style.textAlign = 'center';
+                subtitle.style.color = '#7f8c8d';
+                subtitle.style.marginBottom = '20px';
+                pngContent.appendChild(subtitle);
+                
+                // Create table for the matches
+                const table = document.createElement('table');
+                table.style.width = '100%';
+                table.style.borderCollapse = 'collapse';
+                table.style.marginBottom = '20px';
+                
+                // Add table header
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                headerRow.style.backgroundColor = '#3498db';
+                headerRow.style.color = 'white';
+                
+                ['Time', 'Competition', 'Match', 'Prediction', 'GD', 'Odds'].forEach(text => {
+                    const th = document.createElement('th');
+                    th.textContent = text;
+                    th.style.padding = '10px';
+                    th.style.textAlign = 'left';
+                    headerRow.appendChild(th);
+                });
+                
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+                
+                // Add table body
+                const tbody = document.createElement('tbody');
+                
+                let currentCompetition = '';
+                
+                filteredMatches.forEach(match => {
+                    // Add competition header if it's different from previous
+                    if (match.competition !== currentCompetition) {
+                        currentCompetition = match.competition;
+                        const compRow = document.createElement('tr');
+                        compRow.style.backgroundColor = '#2c3e50';
+                        compRow.style.color = 'white';
+                        compRow.style.fontWeight = 'bold';
+                        
+                        const compCell = document.createElement('td');
+                        compCell.textContent = currentCompetition;
+                        compCell.colSpan = 6;
+                        compCell.style.padding = '8px';
+                        compRow.appendChild(compCell);
+                        
+                        tbody.appendChild(compRow);
+                    }
+                    
+                    const row = document.createElement('tr');
+                    
+                    // Set row color based on goal difference
+                    if (match.goalDifference >= 3) {
+                        row.style.backgroundColor = '#e74c3c';
+                        row.style.color = 'white';
+                    } else if (match.goalDifference >= 2) {
+                        row.style.backgroundColor = '#f39c12';
+                        row.style.color = 'white';
+                    } else {
+                        row.style.backgroundColor = '#f8f9fa';
+                    }
+                    
+                    // Add cells
+                    [match.time, match.competition, `${match.homeTeam} vs ${match.awayTeam}`, 
+                     match.score, match.goalDifference, match.odds].forEach(text => {
+                        const cell = document.createElement('td');
+                        cell.textContent = text;
+                        cell.style.padding = '8px';
+                        cell.style.borderBottom = '1px solid #ddd';
+                        row.appendChild(cell);
+                    });
+                    
+                    tbody.appendChild(row);
+                });
+                
+                table.appendChild(tbody);
+                pngContent.appendChild(table);
+                
+                // Add footer
+                const footer = document.createElement('p');
+                footer.textContent = 'Data sourced from One Million Predictions';
+                footer.style.textAlign = 'center';
+                footer.style.color = '#7f8c8d';
+                footer.style.fontSize = '12px';
+                footer.style.marginTop = '20px';
+                pngContent.appendChild(footer);
+                
+                // Add the temporary div to the body (but keep it hidden)
+                pngContent.style.position = 'absolute';
+                pngContent.style.left = '-9999px';
+                document.body.appendChild(pngContent);
+                
+                // Use html2canvas to create the PNG
+                html2canvas(pngContent, {
+                    scale: 2,
+                    logging: false,
+                    useCORS: true,
+                    allowTaint: true
+                }).then(canvas => {
+                    // Display the canvas
+                    exportCanvas.width = canvas.width;
+                    exportCanvas.height = canvas.height;
+                    const ctx = exportCanvas.getContext('2d');
+                    ctx.clearRect(0, 0, exportCanvas.width, exportCanvas.height);
+                    ctx.drawImage(canvas, 0, 0);
+                    
+                    // Create download link
+                    const link = document.createElement('a');
+                    link.download = `football_predictions_${now.getTime()}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    
+                    // Remove the temporary div
+                    document.body.removeChild(pngContent);
+                });
+            }
+            
+            // Event listeners
+            filter3Plus.addEventListener('click', () => filterMatches(3));
+            filter2Plus.addEventListener('click', () => filterMatches(2));
+            showAll.addEventListener('click', showAllMatches);
+            exportCSV.addEventListener('click', exportToCSV);
+            exportPNG.addEventListener('click', exportToPNG);
+        });
+    </script>
+</body>
+</html>
