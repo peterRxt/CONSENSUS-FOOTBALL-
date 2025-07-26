@@ -16,6 +16,8 @@
             --gray: #757575;
             --light-gray: #e0e0e0;
             --white: #ffffff;
+            --home-win: #e3f2fd;
+            --away-win: #ffebee;
             --card-shadow: 0 4px 16px rgba(0,0,0,0.12);
         }
         body {
@@ -157,6 +159,8 @@
         th { background: var(--primary); color: var(--white); font-weight: 600; }
         tr:last-child td { border-bottom: none; }
         tr.highlight { background: #e9f7ef; }
+        tr.home-win { background: var(--home-win); }
+        tr.away-win { background: var(--away-win); }
         tr:hover { background: rgba(63,81,181,0.07); }
         .sources-list { display: flex; flex-wrap: wrap; gap: 6px; }
         .source-badge {
@@ -214,6 +218,38 @@
             font-weight: 500;
             cursor: pointer;
             transition: background .2s;
+        }
+        .clear-btn {
+            background: var(--gray);
+            color: var(--white);
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background .2s;
+        }
+        /* Tabs styling */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gray);
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+        }
+        .tab:hover:not(.active) {
+            color: var(--primary-dark);
+            border-bottom: 3px solid var(--light-gray);
         }
         /* PNG Export Table Styling */
         .export-png-table {
@@ -280,6 +316,28 @@
             color: #666;
             margin-top: 3px;
         }
+        .home-win-export {
+            background-color: var(--home-win);
+        }
+        .away-win-export {
+            background-color: var(--away-win);
+        }
+        .export-type-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        .home-badge {
+            background-color: var(--primary);
+            color: white;
+        }
+        .away-badge {
+            background-color: var(--danger);
+            color: white;
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
@@ -301,18 +359,27 @@
             <input type="file" id="file-multi" accept=".csv" multiple>
         </div>
         <button id="analyze-btn" class="btn" disabled><i class="fas fa-chart-bar"></i> Analyze Files</button>
+        <button id="clear-btn" class="clear-btn" style="margin-left: 10px;"><i class="fas fa-trash"></i> Clear Data</button>
         <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
     </div>
     <div class="results">
         <div id="stage1" class="tab-content active">
             <div class="card">
+                <div class="tabs">
+                    <div class="tab active" data-filter="all">All Matches</div>
+                    <div class="tab" data-filter="home">Home Wins</div>
+                    <div class="tab" data-filter="away">Away Wins</div>
+                </div>
                 <h2>Maximum Consensus Matches <span class="badge" id="stage1-badge">Fuzzy</span></h2>
                 <div class="export-btn-container">
                     <button id="delete-unselected-btn" class="delete-btn">
                         <i class="fas fa-trash-alt"></i> Delete Unselected
                     </button>
-                    <button id="export-btn" class="btn btn-secondary" style="background:var(--secondary);">
-                        <i class="fas fa-file-export"></i> Export Selected to PNG
+                    <button id="export-home-btn" class="btn btn-secondary" style="background:var(--primary);">
+                        <i class="fas fa-file-export"></i> Export Home Wins
+                    </button>
+                    <button id="export-away-btn" class="btn btn-secondary" style="background:var(--danger);">
+                        <i class="fas fa-file-export"></i> Export Away Wins
                     </button>
                 </div>
                 <div class="stats">
@@ -323,6 +390,14 @@
                     <div class="stat-card">
                         <h3>Consensus Level</h3>
                         <p id="consensus-level">-</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Home Wins</h3>
+                        <p id="home-wins">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Away Wins</h3>
+                        <p id="away-wins">0</p>
                     </div>
                 </div>
                 <div style="overflow-x:auto;">
@@ -357,10 +432,24 @@ const progressBar = document.getElementById('progress-bar');
 const fileInput = document.getElementById('file-multi');
 const customUpload = document.getElementById('custom-upload');
 const uploadLabelText = document.getElementById('upload-label-text');
-const exportBtn = document.getElementById('export-btn');
+const exportHomeBtn = document.getElementById('export-home-btn');
+const exportAwayBtn = document.getElementById('export-away-btn');
 const deleteUnselectedBtn = document.getElementById('delete-unselected-btn');
+const clearBtn = document.getElementById('clear-btn');
+const tabs = document.querySelectorAll('.tab');
 let selectedGroups = [];
 let allMatchGroups = []; // Store all match groups for reference
+let currentFilter = 'all'; // 'all', 'home', or 'away'
+
+// Load data from localStorage if available
+if (localStorage.getItem('footballPredictionsData')) {
+    const savedData = JSON.parse(localStorage.getItem('footballPredictionsData'));
+    allMatchGroups = savedData.allMatchGroups;
+    selectedGroups = savedData.selectedGroups;
+    currentFilter = savedData.currentFilter;
+    updateStage1Results(allMatchGroups, savedData.consensusLevel);
+    updateTabUI();
+}
 
 customUpload.addEventListener('dragover', (e) => { e.preventDefault(); customUpload.classList.add('dragover'); });
 customUpload.addEventListener('dragleave', () => customUpload.classList.remove('dragover'));
@@ -516,15 +605,24 @@ function extractMaximumConsensusMatches(allFileMatches) {
     return {matches: resultGroups, consensusLevel: maxSources};
 }
 
+// Get prediction type for a match group
+function getGroupPredictionType(group) {
+    let types = group.instances.map(inst => predictionType(
+        inst['Prediction'] || inst['Score Prediction'] || inst['Correct Score'] || '-'
+    ));
+    const firstType = types[0];
+    if (firstType && types.every(t => t === firstType)) {
+        return firstType;
+    }
+    return '';
+}
+
 // Automatic selection: only matches with same prediction type in all sources are auto-selected
 function autoSelectGroups(matchGroups) {
     const selected = [];
     matchGroups.forEach((group, idx) => {
-        let types = group.instances.map(inst => predictionType(
-            inst['Prediction'] || inst['Score Prediction'] || inst['Correct Score'] || '-'
-        ));
-        const firstType = types[0];
-        if (firstType && types.every(t => t === firstType)) {
+        const predType = getGroupPredictionType(group);
+        if (predType && predType !== 'draw') {
             selected.push(idx);
         }
     });
@@ -585,6 +683,20 @@ function updateStage1Results(matchGroups, consensusLevel) {
     tbody.innerHTML = '';
     document.getElementById('total-matches').textContent = matchGroups.length;
     document.getElementById('consensus-level').textContent = consensusLevel > 0 ? consensusLevel + " sources" : "-";
+    
+    // Count home and away wins
+    let homeWins = 0;
+    let awayWins = 0;
+    
+    matchGroups.forEach(group => {
+        const predType = getGroupPredictionType(group);
+        if (predType === 'home') homeWins++;
+        if (predType === 'away') awayWins++;
+    });
+    
+    document.getElementById('home-wins').textContent = homeWins;
+    document.getElementById('away-wins').textContent = awayWins;
+    
     if (matchGroups.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -596,6 +708,7 @@ function updateStage1Results(matchGroups, consensusLevel) {
         `;
         return;
     }
+    
     const autoSelected = autoSelectGroups(matchGroups);
     matchGroups.forEach((group, idx) => {
         const homeTeam = Object.entries(group.instances.reduce((acc, m) => {
@@ -614,8 +727,15 @@ function updateStage1Results(matchGroups, consensusLevel) {
             let pred = m['Prediction']||m['Score Prediction']||m['Correct Score']||'-';
             return `<div><span class="source-badge">${m.source}</span>: <strong>${pred}</strong></div>`;
         }).join('');
+        
+        // Determine prediction type for styling
+        const predType = getGroupPredictionType(group);
+        
         const row = document.createElement('tr');
         row.className = 'match-row';
+        if (predType === 'home') row.classList.add('home-win');
+        if (predType === 'away') row.classList.add('away-win');
+        
         row.innerHTML = `
             <td>
                 <button class="select-btn${autoSelected.includes(idx) ? ' selected' : ''}" data-idx="${idx}">${autoSelected.includes(idx) ? 'Selected' : 'Select'}</button>
@@ -638,12 +758,20 @@ function updateStage1Results(matchGroups, consensusLevel) {
                 ${predictionRows}
             </td>
         `;
+        
         if (autoSelected.includes(idx)) {
             row.classList.add('highlight');
             selectedGroups.push(group);
         }
-        tbody.appendChild(row);
+        
+        // Apply filter
+        if (currentFilter === 'all' || 
+            (currentFilter === 'home' && predType === 'home') || 
+            (currentFilter === 'away' && predType === 'away')) {
+            tbody.appendChild(row);
+        }
     });
+    
     // Add select/deselect logic
     const selectBtns = document.querySelectorAll('.select-btn');
     selectBtns.forEach(btn => {
@@ -661,26 +789,106 @@ function updateStage1Results(matchGroups, consensusLevel) {
                 tr.classList.add('highlight');
                 selectedGroups.push(matchGroups[idx]);
             }
+            saveToLocalStorage(consensusLevel);
         });
+    });
+    
+    saveToLocalStorage(consensusLevel);
+}
+
+function updateTabUI() {
+    tabs.forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.dataset.filter === currentFilter) {
+            tab.classList.add('active');
+        }
     });
 }
 
-function exportSelectedToPNG() {
-    if (!selectedGroups.length) {
-        alert('No matches selected to export.');
+function filterMatches(filter) {
+    currentFilter = filter;
+    updateTabUI();
+    
+    const rows = document.querySelectorAll('.match-row');
+    rows.forEach(row => {
+        const idx = parseInt(row.querySelector('.select-btn').dataset.idx);
+        const group = allMatchGroups[idx];
+        const predType = getGroupPredictionType(group);
+        
+        if (filter === 'all' || 
+            (filter === 'home' && predType === 'home') || 
+            (filter === 'away' && predType === 'away')) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function saveToLocalStorage(consensusLevel) {
+    const data = {
+        allMatchGroups,
+        selectedGroups,
+        currentFilter,
+        consensusLevel
+    };
+    localStorage.setItem('footballPredictionsData', JSON.stringify(data));
+}
+
+function clearData() {
+    localStorage.removeItem('footballPredictionsData');
+    allMatchGroups = [];
+    selectedGroups = [];
+    currentFilter = 'all';
+    document.getElementById('stage1-results').innerHTML = `
+        <tr>
+            <td colspan="5" class="empty-state">
+                <i class="fas fa-futbol"></i>
+                <p>Upload and analyze CSV files to see consensus matches</p>
+            </td>
+        </tr>
+    `;
+    document.getElementById('total-matches').textContent = '0';
+    document.getElementById('consensus-level').textContent = '-';
+    document.getElementById('home-wins').textContent = '0';
+    document.getElementById('away-wins').textContent = '0';
+    fileInput.value = '';
+    uploadLabelText.textContent = "Click or drag to upload files";
+    analyzeBtn.disabled = true;
+    updateTabUI();
+}
+
+function exportSelectedToPNG(type) {
+    const groupsToExport = selectedGroups.filter(group => {
+        const predType = getGroupPredictionType(group);
+        if (type === 'home') return predType === 'home';
+        if (type === 'away') return predType === 'away';
+        return true;
+    });
+    
+    if (!groupsToExport.length) {
+        alert(`No ${type} wins selected to export.`);
         return;
     }
+    
     const container = document.getElementById('export-table-container');
     container.innerHTML = '';
 
     // Build export table for PNG
     const table = document.createElement('table');
     table.className = 'export-png-table';
+    
     // Title
     const title = document.createElement('div');
     title.className = 'export-png-title';
     title.textContent = 'Selected Football Predictions';
     container.appendChild(title);
+    
+    // Type badge
+    const typeBadge = document.createElement('div');
+    typeBadge.className = `export-type-badge ${type}-badge`;
+    typeBadge.textContent = type === 'home' ? 'HOME WINS' : 'AWAY WINS';
+    container.appendChild(typeBadge);
 
     // Table header
     const thead = document.createElement('thead');
@@ -695,7 +903,7 @@ function exportSelectedToPNG() {
 
     // Table body
     const tbody = document.createElement('tbody');
-    selectedGroups.forEach(group => {
+    groupsToExport.forEach(group => {
         // Most common team names & time
         const homeTeam = Object.entries(group.instances.reduce((acc, m) => {
             acc[m['Home Team']] = (acc[m['Home Team']]||0)+1; return acc;
@@ -725,6 +933,9 @@ function exportSelectedToPNG() {
         }).join('<br>');
 
         const tr = document.createElement('tr');
+        if (type === 'home') tr.classList.add('home-win-export');
+        if (type === 'away') tr.classList.add('away-win-export');
+        
         // Arrange columns: time | teams | predictions
         const timeCell = document.createElement('td');
         timeCell.innerHTML = `<div class="export-png-time">${formattedTime.simple}</div>`;
@@ -741,18 +952,20 @@ function exportSelectedToPNG() {
     container.appendChild(table);
     container.style.display = 'block';
 
-    // Hide export button for screenshot
-    exportBtn.style.visibility = 'hidden';
+    // Hide export buttons for screenshot
+    exportHomeBtn.style.visibility = 'hidden';
+    exportAwayBtn.style.visibility = 'hidden';
 
     html2canvas(container, {
         scale: 2,
         backgroundColor: '#f8f9fa'
     }).then(canvas => {
-        exportBtn.style.visibility = 'visible';
+        exportHomeBtn.style.visibility = 'visible';
+        exportAwayBtn.style.visibility = 'visible';
         container.style.display = 'none';
         // Download PNG
         const link = document.createElement('a');
-        link.download = 'selected-predictions.png';
+        link.download = `selected-${type}-wins.png`;
         link.href = canvas.toDataURL('image/png');
         document.body.appendChild(link);
         link.click();
@@ -774,6 +987,7 @@ function deleteUnselectedMatches() {
     
     // Clear selected groups (they're all that's left now)
     selectedGroups = [...allMatchGroups];
+    saveToLocalStorage(document.getElementById('consensus-level').textContent.replace(' sources', ''));
 }
 
 analyzeBtn.addEventListener('click', async function() {
@@ -804,8 +1018,19 @@ analyzeBtn.addEventListener('click', async function() {
     }
 });
 
-exportBtn.addEventListener('click', exportSelectedToPNG);
+// Tab click handlers
+tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+        currentFilter = tab.dataset.filter;
+        filterMatches(currentFilter);
+        saveToLocalStorage(document.getElementById('consensus-level').textContent.replace(' sources', ''));
+    });
+});
+
+exportHomeBtn.addEventListener('click', () => exportSelectedToPNG('home'));
+exportAwayBtn.addEventListener('click', () => exportSelectedToPNG('away'));
 deleteUnselectedBtn.addEventListener('click', deleteUnselectedMatches);
+clearBtn.addEventListener('click', clearData);
 </script>
 </body>
 </html>
