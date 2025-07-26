@@ -203,6 +203,17 @@
             display: flex;
             justify-content: flex-end;
             margin-bottom: 10px;
+            gap: 10px;
+        }
+        .delete-btn {
+            background: var(--danger);
+            color: var(--white);
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background .2s;
         }
         /* PNG Export Table Styling */
         .export-png-table {
@@ -264,6 +275,11 @@
             font-weight: 500;
             margin-bottom: 8px;
         }
+        .local-time {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 3px;
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
@@ -292,6 +308,9 @@
             <div class="card">
                 <h2>Maximum Consensus Matches <span class="badge" id="stage1-badge">Fuzzy</span></h2>
                 <div class="export-btn-container">
+                    <button id="delete-unselected-btn" class="delete-btn">
+                        <i class="fas fa-trash-alt"></i> Delete Unselected
+                    </button>
                     <button id="export-btn" class="btn btn-secondary" style="background:var(--secondary);">
                         <i class="fas fa-file-export"></i> Export Selected to PNG
                     </button>
@@ -339,7 +358,9 @@ const fileInput = document.getElementById('file-multi');
 const customUpload = document.getElementById('custom-upload');
 const uploadLabelText = document.getElementById('upload-label-text');
 const exportBtn = document.getElementById('export-btn');
+const deleteUnselectedBtn = document.getElementById('delete-unselected-btn');
 let selectedGroups = [];
+let allMatchGroups = []; // Store all match groups for reference
 
 customUpload.addEventListener('dragover', (e) => { e.preventDefault(); customUpload.classList.add('dragover'); });
 customUpload.addEventListener('dragleave', () => customUpload.classList.remove('dragover'));
@@ -510,7 +531,55 @@ function autoSelectGroups(matchGroups) {
     return selected;
 }
 
+// Format time with +3 hours for local time
+function formatTimeWithLocal(timeStr) {
+    if (!timeStr) return '';
+    
+    try {
+        // Try to parse as ISO date
+        let date = new Date(timeStr);
+        if (!isNaN(date.getTime())) {
+            // Add 3 hours for local time
+            const localDate = new Date(date.getTime() + (3 * 60 * 60 * 1000));
+            return {
+                original: date.toLocaleString(),
+                local: localDate.toLocaleString(),
+                simple: date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                localSimple: localDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            };
+        }
+        
+        // Try to parse as simple time (HH:MM)
+        const timeMatch = timeStr.match(/^(\d{1,2}):(\d{2})$/);
+        if (timeMatch) {
+            const hours = parseInt(timeMatch[1]);
+            const mins = parseInt(timeMatch[2]);
+            const date = new Date();
+            date.setHours(hours, mins, 0, 0);
+            // Add 3 hours for local time
+            const localDate = new Date(date.getTime() + (3 * 60 * 60 * 1000));
+            return {
+                original: date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                local: localDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                simple: date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                localSimple: localDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            };
+        }
+    } catch (e) {
+        console.error('Error parsing time:', e);
+    }
+    
+    // Fallback - return as is
+    return {
+        original: timeStr,
+        local: timeStr,
+        simple: timeStr,
+        localSimple: timeStr
+    };
+}
+
 function updateStage1Results(matchGroups, consensusLevel) {
+    allMatchGroups = matchGroups; // Store all match groups
     selectedGroups = [];
     const tbody = document.getElementById('stage1-results');
     tbody.innerHTML = '';
@@ -539,6 +608,7 @@ function updateStage1Results(matchGroups, consensusLevel) {
             const t = m['Time']||m['Date']||m['DateTime']||'';
             if (t) acc[t]=(acc[t]||0)+1; return acc;
         },{})).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+        const formattedTime = formatTimeWithLocal(time);
         const sources = group.instances.map(m => m.source);
         const predictionRows = group.instances.map(m => {
             let pred = m['Prediction']||m['Score Prediction']||m['Correct Score']||'-';
@@ -552,9 +622,13 @@ function updateStage1Results(matchGroups, consensusLevel) {
             </td>
             <td>
                 ${homeTeam} vs ${awayTeam}
-                <div class="match-time">${time}</div>
+                <div class="match-time">${formattedTime.simple}</div>
             </td>
-            <td>${time}</td>
+            <td>
+                ${formattedTime.simple}
+                ${formattedTime.localSimple !== formattedTime.simple ? 
+                    `<div class="local-time">${formattedTime.localSimple} (local +3)</div>` : ''}
+            </td>
             <td>
                 <div class="sources-list">
                     ${sources.map(s => `<span class="source-badge">${s}</span>`).join('')}
@@ -633,6 +707,7 @@ function exportSelectedToPNG() {
             const t = m['Time']||m['Date']||m['DateTime']||'';
             if (t) acc[t]=(acc[t]||0)+1; return acc;
         },{})).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+        const formattedTime = formatTimeWithLocal(time);
 
         // Merge teams cell
         const teamsCell = document.createElement('td');
@@ -651,7 +726,12 @@ function exportSelectedToPNG() {
 
         const tr = document.createElement('tr');
         // Arrange columns: time | teams | predictions
-        tr.appendChild(document.createElement('td')).innerHTML = `<div class="export-png-time">${time}</div>`;
+        const timeCell = document.createElement('td');
+        timeCell.innerHTML = `<div class="export-png-time">${formattedTime.simple}</div>`;
+        if (formattedTime.localSimple !== formattedTime.simple) {
+            timeCell.innerHTML += `<div class="local-time">${formattedTime.localSimple} (local +3)</div>`;
+        }
+        tr.appendChild(timeCell);
         tr.appendChild(teamsCell);
         tr.appendChild(predictionsCell);
         tbody.appendChild(tr);
@@ -678,6 +758,22 @@ function exportSelectedToPNG() {
         link.click();
         document.body.removeChild(link);
     });
+}
+
+function deleteUnselectedMatches() {
+    if (!allMatchGroups.length) return;
+    
+    // Keep only selected groups
+    allMatchGroups = allMatchGroups.filter((group, idx) => {
+        return selectedGroups.includes(group);
+    });
+    
+    // Update the table with only selected matches
+    updateStage1Results(allMatchGroups, allMatchGroups.length > 0 ? 
+        document.getElementById('consensus-level').textContent.replace(' sources', '') : 0);
+    
+    // Clear selected groups (they're all that's left now)
+    selectedGroups = [...allMatchGroups];
 }
 
 analyzeBtn.addEventListener('click', async function() {
@@ -709,6 +805,7 @@ analyzeBtn.addEventListener('click', async function() {
 });
 
 exportBtn.addEventListener('click', exportSelectedToPNG);
+deleteUnselectedBtn.addEventListener('click', deleteUnselectedMatches);
 </script>
 </body>
 </html>
