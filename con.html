@@ -4,1281 +4,711 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Football Prediction Consensus Analyzer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #3f51b5;
             --primary-dark: #303f9f;
             --secondary: #ff5722;
             --success: #4caf50;
-            --warning: #ff9800;
             --danger: #f44336;
             --light: #f5f5f5;
-            --dark: #212121;
             --gray: #757575;
             --light-gray: #e0e0e0;
             --white: #ffffff;
-            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
+            --card-shadow: 0 4px 16px rgba(0,0,0,0.12);
         }
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
         body {
             font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            color: var(--dark);
-            background-color: #f8f9fa;
-            padding: 0;
             margin: 0;
+            background: linear-gradient(135deg, #e3e6f3 0%, #f5f5f5 100%);
+            color: var(--primary-dark);
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
         header {
-            background-color: var(--primary);
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
             color: var(--white);
-            padding: 20px 0;
+            padding: 36px 0 28px;
             box-shadow: var(--card-shadow);
-            margin-bottom: 30px;
+            border-radius: 0 0 24px 24px;
+            text-align: center;
         }
-        
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
+        .container {
+            max-width: 800px;
+            margin: 48px auto 0 auto;
+            padding: 10px;
         }
-        
-        h1 {
-            font-size: 1.8rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-        
-        .subtitle {
-            font-size: 1rem;
-            color: rgba(255, 255, 255, 0.8);
-            font-weight: 400;
-        }
-        
         .card {
-            background-color: var(--white);
-            border-radius: 10px;
+            background: var(--white);
+            border-radius: 14px;
             box-shadow: var(--card-shadow);
-            padding: 25px;
-            margin-bottom: 25px;
-            transition: var(--transition);
+            padding: 32px 24px;
+            margin-bottom: 28px;
         }
-        
-        .card:hover {
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -1px;
         }
-        
         h2 {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 600;
-            margin-bottom: 20px;
+            margin-bottom: 22px;
             color: var(--primary);
+        }
+        .file-input label {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--gray);
+            margin-bottom: 12px;
+            display: block;
+        }
+        .file-input input[type="file"] {
+            display: none;
+        }
+        .custom-upload {
             display: flex;
             align-items: center;
+            justify-content: center;
+            border: 2px dashed var(--primary);
+            background: var(--light);
+            border-radius: 10px;
+            padding: 32px 0;
+            cursor: pointer;
+            transition: border-color 0.2s;
         }
-        
-        h2 .badge {
-            margin-left: 10px;
-            background-color: var(--primary);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+        .custom-upload.dragover {
+            border-color: var(--secondary);
+            background: #e3e6f3;
+        }
+        .custom-upload i {
+            font-size: 2.1rem;
+            color: var(--primary);
+            margin-right: 12px;
+        }
+        .custom-upload span {
+            font-size: 1rem;
+            color: var(--primary-dark);
             font-weight: 500;
         }
-        
-        .upload-section {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .file-inputs {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .file-input {
-            position: relative;
-        }
-        
-        .file-input label {
-            display: block;
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-bottom: 8px;
-            color: var(--gray);
-        }
-        
-        .file-input input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--light-gray);
-            border-radius: 6px;
-            font-size: 0.9rem;
-            transition: var(--transition);
-        }
-        
-        .file-input input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
-        }
-        
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background-color: var(--primary);
+            background: var(--primary);
             color: var(--white);
             border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
+            padding: 14px 32px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
-            transition: var(--transition);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 1.07rem;
+            font-weight: 600;
+            margin-top: 30px;
+            box-shadow: 0 2px 5px rgba(63,81,181,0.08);
+            transition: background 0.2s;
         }
-        
-        .btn:hover {
-            background-color: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-        
-        .btn:disabled {
-            background-color: var(--light-gray);
-            color: var(--gray);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .btn i {
-            margin-right: 8px;
-        }
-        
-        .btn-secondary {
-            background-color: var(--secondary);
-        }
-        
-        .btn-secondary:hover {
-            background-color: #e64a19;
-        }
-        
+        .btn i { margin-right: 10px; }
+        .btn:disabled { background: var(--light-gray); color: var(--gray); cursor: not-allowed; }
         .progress-container {
             width: 100%;
-            background-color: var(--light-gray);
+            background: var(--light-gray);
             border-radius: 6px;
-            margin: 20px 0;
+            margin: 24px 0 0;
             height: 10px;
             overflow: hidden;
         }
-        
         .progress-bar {
             height: 100%;
             background: linear-gradient(90deg, var(--primary), var(--secondary));
             border-radius: 6px;
             width: 0%;
-            transition: width 0.5s ease;
+            transition: width 0.5s;
         }
-        
-        .tabs {
-            display: flex;
-            border-bottom: 1px solid var(--light-gray);
-            margin-bottom: 20px;
-            overflow-x: auto;
-            scrollbar-width: none; /* Firefox */
-        }
-        
-        .tabs::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera */
-        }
-        
-        .tab-btn {
-            padding: 12px 20px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 500;
-            color: var(--gray);
-            position: relative;
-            white-space: nowrap;
-            transition: var(--transition);
-        }
-        
-        .tab-btn.active {
-            color: var(--primary);
-        }
-        
-        .tab-btn.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background-color: var(--primary);
-            border-radius: 3px 3px 0 0;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
         .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
+            display: flex;
+            gap: 24px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
         }
-        
         .stat-card {
-            background-color: var(--white);
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: var(--card-shadow);
+            background: var(--light);
+            border-radius: 10px;
+            padding: 18px 30px;
+            box-shadow: 0 2px 10px rgba(63,81,181,0.05);
             text-align: center;
-            transition: var(--transition);
+            min-width: 140px;
+            flex: 1 0 140px;
         }
-        
-        .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-        }
-        
-        .stat-card h3 {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--gray);
-            margin-bottom: 8px;
-        }
-        
-        .stat-card p {
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: var(--primary);
-        }
-        
-        .stat-card .secondary {
-            color: var(--secondary);
-        }
-        
-        .stat-card .success {
-            color: var(--success);
-        }
-        
-        .stat-card .danger {
-            color: var(--danger);
-        }
-        
-        .stat-card .warning {
-            color: var(--warning);
-        }
-        
+        .stat-card h3 { font-size: 1rem; font-weight: 500; color: var(--gray); margin-bottom: 7px; }
+        .stat-card p { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 0.9rem;
+            margin-top: 12px;
+            font-size: 1rem;
+            border-radius: 10px 10px 0 0;
+            overflow: hidden;
+            background: var(--white);
         }
-        
-        th {
-            background-color: var(--primary);
-            color: var(--white);
-            font-weight: 500;
-            padding: 12px 15px;
-            text-align: left;
-        }
-        
-        th:first-child {
-            border-top-left-radius: 8px;
-        }
-        
-        th:last-child {
-            border-top-right-radius: 8px;
-        }
-        
-        td {
-            padding: 12px 15px;
+        th, td {
+            padding: 14px 10px;
             border-bottom: 1px solid var(--light-gray);
             vertical-align: middle;
         }
-        
-        tr:last-child td {
-            border-bottom: none;
-        }
-        
-        tr:hover {
-            background-color: rgba(63, 81, 181, 0.05);
-        }
-        
-        .match-row {
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        
-        .match-row:hover {
-            background-color: rgba(63, 81, 181, 0.05);
-        }
-        
-        .highlight {
-            background-color: rgba(76, 175, 80, 0.1);
-        }
-        
-        .goal-display {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-weight: 600;
-            background-color: rgba(63, 81, 181, 0.1);
-            color: var(--primary);
-        }
-        
-        .home-win {
-            background-color: rgba(76, 175, 80, 0.1);
-            color: var(--success);
-        }
-        
-        .away-win {
-            background-color: rgba(244, 67, 54, 0.1);
-            color: var(--danger);
-        }
-        
-        .draw {
-            background-color: rgba(255, 152, 0, 0.1);
-            color: var(--warning);
-        }
-        
-        .filter-controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 20px;
-            align-items: center;
-        }
-        
-        .filter-group {
-            display: flex;
-            align-items: center;
-        }
-        
-        .filter-group label {
-            margin-right: 10px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--gray);
-        }
-        
-        .filter-group select {
-            padding: 8px 12px;
-            border-radius: 6px;
-            border: 1px solid var(--light-gray);
-            font-size: 0.9rem;
-            transition: var(--transition);
-        }
-        
-        .filter-group select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
-        }
-        
-        .sources-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-        
+        th { background: var(--primary); color: var(--white); font-weight: 600; }
+        tr:last-child td { border-bottom: none; }
+        tr.highlight { background: #e9f7ef; }
+        tr:hover { background: rgba(63,81,181,0.07); }
+        .sources-list { display: flex; flex-wrap: wrap; gap: 6px; }
         .source-badge {
-            background-color: var(--light-gray);
+            background: var(--light-gray);
             color: var(--gray);
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 0.85rem;
             font-weight: 500;
         }
-        
         .empty-state {
             text-align: center;
             padding: 40px 20px;
             color: var(--gray);
         }
-        
-        .empty-state i {
-            font-size: 3rem;
-            color: var(--light-gray);
-            margin-bottom: 15px;
+        .empty-state i { font-size: 3rem; color: var(--light-gray); margin-bottom: 12px;}
+        .match-time { font-size: 0.95rem; color: var(--gray); margin-top: 3px;}
+        .badge {
+            margin-left: 10px;
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
         }
-        
-        .empty-state p {
-            font-size: 1rem;
-            margin-bottom: 15px;
+        .select-btn {
+            background: var(--secondary);
+            color: var(--white);
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 5px;
+            min-width: 80px;
+            transition: background .2s;
         }
-        
-        .match-time {
-            font-size: 0.8rem;
-            color: var(--gray);
-            margin-top: 4px;
+        .select-btn.selected {
+            background: var(--success);
         }
-        
         .export-btn-container {
             display: flex;
             justify-content: flex-end;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
-        
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-            
-            .file-inputs {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            th, td {
-                padding: 10px 12px;
-                font-size: 0.85rem;
-            }
-            
-            .tab-btn {
-                padding: 10px 15px;
-                font-size: 0.85rem;
-            }
-            
-            h1 {
-                font-size: 1.5rem;
-            }
-            
-            h2 {
-                font-size: 1.2rem;
-            }
-            
-            .card {
-                padding: 20px;
-            }
+        /* PNG Export Table Styling */
+        .export-png-table {
+            width: 700px;
+            margin: 0 auto;
+            border-radius: 14px;
+            font-family: 'Inter', sans-serif;
+            background: #fff;
+            box-shadow: var(--card-shadow);
+            border-collapse: separate;
+            border-spacing: 0;
+            overflow: hidden;
         }
-        
-        @media (max-width: 480px) {
-            .stats {
-                grid-template-columns: 1fr;
-            }
-            
-            .filter-controls {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .filter-group {
-                width: 100%;
-            }
-            
-            .filter-group select {
-                width: 100%;
-            }
-            
-            .export-btn-container {
-                justify-content: center;
-            }
+        .export-png-table th {
+            background: var(--primary);
+            color: #fff;
+            font-size: 1.15rem;
+            font-weight: 600;
+            padding: 18px 10px;
+            border-right: 2px solid #fff;
+        }
+        .export-png-table th:last-child {
+            border-right: none;
+        }
+        .export-png-table td {
+            padding: 14px 10px;
+            font-size: 1rem;
+            text-align: center;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        .export-png-table tr:last-child td {
+            border-bottom: none;
+        }
+        .export-png-table .team-cell {
+            font-weight: 600;
+            font-size: 1.07rem;
+            color: var(--primary-dark);
+        }
+        .export-png-table .prediction-cell {
+            font-size: 1.07rem;
+            font-weight: 500;
+            color: var(--secondary);
+            background: #ffe6df;
+            border-radius: 6px;
+            padding: 7px 8px;
+            margin: 3px 0;
+        }
+        .export-png-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+            padding: 18px 0 5px 0;
+            text-align: center;
+            letter-spacing: -1px;
+        }
+        .export-png-time {
+            font-size: 0.98rem;
+            color: var(--gray);
+            font-weight: 500;
+            margin-bottom: 8px;
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body>
-    <header>
-        <div class="header-content">
-            <h1>Football Prediction Consensus Analyzer</h1>
-            <p class="subtitle">Combine multiple prediction sources to find the safest bets</p>
+<header>
+    <h1>Football Prediction Consensus Analyzer</h1>
+    <div style="font-size:1.1rem;opacity:.95;margin-top:10px;">Upload predictions from multiple sources. Fuzzy match, select, and export consensus matches.</div>
+</header>
+<div class="container">
+    <div class="card upload-section">
+        <h2><i class="fas fa-upload"></i> Upload Prediction Files</h2>
+        <div class="file-input">
+            <label for="file-multi">Select CSV Prediction Files (2 to 10)</label>
+            <label class="custom-upload" id="custom-upload" for="file-multi">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span id="upload-label-text">Click or drag to upload files</span>
+            </label>
+            <input type="file" id="file-multi" accept=".csv" multiple>
         </div>
-    </header>
-    
-    <div class="container">
-        <div class="card upload-section">
-            <h2><i class="fas fa-upload"></i> Upload Prediction Files</h2>
-            <div class="file-inputs">
-                <div class="file-input">
-                    <label for="file1">Source 1 (CSV)</label>
-                    <input type="file" id="file1" accept=".csv">
+        <button id="analyze-btn" class="btn" disabled><i class="fas fa-chart-bar"></i> Analyze Files</button>
+        <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
+    </div>
+    <div class="results">
+        <div id="stage1" class="tab-content active">
+            <div class="card">
+                <h2>Maximum Consensus Matches <span class="badge" id="stage1-badge">Fuzzy</span></h2>
+                <div class="export-btn-container">
+                    <button id="export-btn" class="btn btn-secondary" style="background:var(--secondary);">
+                        <i class="fas fa-file-export"></i> Export Selected to PNG
+                    </button>
                 </div>
-                <div class="file-input">
-                    <label for="file2">Source 2 (CSV)</label>
-                    <input type="file" id="file2" accept=".csv">
-                </div>
-                <div class="file-input">
-                    <label for="file3">Source 3 (CSV)</label>
-                    <input type="file" id="file3" accept=".csv">
-                </div>
-                <div class="file-input">
-                    <label for="file4">Source 4 (CSV)</label>
-                    <input type="file" id="file4" accept=".csv">
-                </div>
-                <div class="file-input">
-                    <label for="file5">Source 5 (CSV)</label>
-                    <input type="file" id="file5" accept=".csv">
-                </div>
-            </div>
-            <button id="analyze-btn" class="btn"><i class="fas fa-chart-bar"></i> Analyze Files</button>
-            <div class="progress-container">
-                <div class="progress-bar" id="progress-bar"></div>
-            </div>
-        </div>
-        
-        <div class="results">
-            <div class="tabs">
-                <button class="tab-btn active" data-tab="stage1"><i class="fas fa-filter"></i> Common Matches</button>
-                <button class="tab-btn" data-tab="stage2"><i class="fas fa-check-circle"></i> Consensus</button>
-                <button class="tab-btn" data-tab="stage3"><i class="fas fa-shield-alt"></i> Safest Bets</button>
-            </div>
-            
-            <div id="stage1" class="tab-content active">
-                <div class="card">
-                    <h2>Common Matches <span class="badge">Appearing in ≥3 Sources</span></h2>
-                    <div class="filter-controls">
-                        <div class="filter-group">
-                            <label for="min-sources"><i class="fas fa-filter"></i> Min Sources:</label>
-                            <select id="min-sources">
-                                <option value="3">3+ Sources</option>
-                                <option value="4">4+ Sources</option>
-                                <option value="5">5 Sources</option>
-                            </select>
-                        </div>
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3>Total Consensus Matches</h3>
+                        <p id="total-matches">0</p>
                     </div>
-                    
-                    <div class="stats">
-                        <div class="stat-card">
-                            <h3>Total Matches</h3>
-                            <p id="total-matches">0</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Average Sources</h3>
-                            <p id="avg-sources">0</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Most Common Match</h3>
-                            <p id="common-match">-</p>
-                        </div>
-                    </div>
-                    
-                    <div style="overflow-x: auto;">
-                        <table id="stage1-table">
-                            <thead>
-                                <tr>
-                                    <th>Match</th>
-                                    <th>Time</th>
-                                    <th>Sources</th>
-                                    <th>Predictions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="stage1-results">
-                                <tr>
-                                    <td colspan="4" class="empty-state">
-                                        <i class="fas fa-futbol"></i>
-                                        <p>Upload and analyze CSV files to see common matches</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="stat-card">
+                        <h3>Consensus Level</h3>
+                        <p id="consensus-level">-</p>
                     </div>
                 </div>
-            </div>
-            
-            <div id="stage2" class="tab-content">
-                <div class="card">
-                    <h2>Consensus Predictions</h2>
-                    <div class="filter-controls">
-                        <div class="filter-group">
-                            <label for="min-consensus"><i class="fas fa-filter"></i> Min Consensus:</label>
-                            <select id="min-consensus">
-                                <option value="2">2+ Sources</option>
-                                <option value="3" selected>3+ Sources</option>
-                                <option value="4">4+ Sources</option>
-                                <option value="5">5 Sources</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="stats">
-                        <div class="stat-card">
-                            <h3>Consensus Matches</h3>
-                            <p id="consensus-count">0</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Home Wins</h3>
-                            <p id="home-wins" class="success">0</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Away Wins</h3>
-                            <p id="away-wins" class="danger">0</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Draws</h3>
-                            <p id="draws" class="warning">0</p>
-                        </div>
-                    </div>
-                    
-                    <div style="overflow-x: auto;">
-                        <table id="stage2-table">
-                            <thead>
-                                <tr>
-                                    <th>Match</th>
-                                    <th>Time</th>
-                                    <th>Prediction</th>
-                                    <th>Consensus</th>
-                                    <th>Sources</th>
-                                </tr>
-                            </thead>
-                            <tbody id="stage2-results">
-                                <tr>
-                                    <td colspan="5" class="empty-state">
-                                        <i class="fas fa-futbol"></i>
-                                        <p>No consensus predictions found yet</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="stage3" class="tab-content">
-                <div class="card">
-                    <h2>Safest Predictions</h2>
-                    <div class="export-btn-container">
-                        <button id="export-btn" class="btn btn-secondary"><i class="fas fa-download"></i> Export as PNG</button>
-                    </div>
-                    <div class="filter-controls">
-                        <div class="filter-group">
-                            <label for="goal-difference"><i class="fas fa-filter"></i> Min Goal Difference:</label>
-                            <select id="goal-difference">
-                                <option value="1">1+ Goals</option>
-                                <option value="2" selected>2+ Goals</option>
-                                <option value="3">3+ Goals</option>
-                                <option value="4">4+ Goals</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="stats">
-                        <div class="stat-card">
-                            <h3>Safe Predictions</h3>
-                            <p id="safe-count">0</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Highest GD</h3>
-                            <p id="highest-gd" class="secondary">0</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Avg. GD</h3>
-                            <p id="avg-gd" class="secondary">0</p>
-                        </div>
-                    </div>
-                    
-                    <div style="overflow-x: auto;">
-                        <table id="stage3-table">
-                            <thead>
-                                <tr>
-                                    <th>Match</th>
-                                    <th>Time</th>
-                                    <th>Prediction</th>
-                                    <th>Goal Diff</th>
-                                    <th>Sources</th>
-                                </tr>
-                            </thead>
-                            <tbody id="stage3-results">
-                                <tr>
-                                    <td colspan="5" class="empty-state">
-                                        <i class="fas fa-futbol"></i>
-                                        <p>No safe predictions found yet</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div style="overflow-x:auto;">
+                    <table id="stage1-table">
+                        <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th>Match</th>
+                                <th>Time</th>
+                                <th>Sources</th>
+                                <th>Predictions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stage1-results">
+                            <tr>
+                                <td colspan="5" class="empty-state">
+                                    <i class="fas fa-futbol"></i>
+                                    <p>Upload and analyze CSV files to see consensus matches</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
+    <div id="export-table-container" style="display:none;"></div>
+</div>
+<script>
+const analyzeBtn = document.getElementById('analyze-btn');
+const progressBar = document.getElementById('progress-bar');
+const fileInput = document.getElementById('file-multi');
+const customUpload = document.getElementById('custom-upload');
+const uploadLabelText = document.getElementById('upload-label-text');
+const exportBtn = document.getElementById('export-btn');
+let selectedGroups = [];
 
-    <script>
-        // Global variables
-        let allMatches = [];
-        let consensusMatches = [];
-        let safePredictions = [];
-        
-        // DOM elements
-        const analyzeBtn = document.getElementById('analyze-btn');
-        const exportBtn = document.getElementById('export-btn');
-        const progressBar = document.getElementById('progress-bar');
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
-        
-        // Tab functionality
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tabId = btn.getAttribute('data-tab');
-                
-                // Update active tab button
-                tabBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                
-                // Update active tab content
-                tabContents.forEach(content => content.classList.remove('active'));
-                document.getElementById(tabId).classList.add('active');
+customUpload.addEventListener('dragover', (e) => { e.preventDefault(); customUpload.classList.add('dragover'); });
+customUpload.addEventListener('dragleave', () => customUpload.classList.remove('dragover'));
+customUpload.addEventListener('drop', (e) => {
+    e.preventDefault();
+    customUpload.classList.remove('dragover');
+    fileInput.files = e.dataTransfer.files;
+    handleFileSelection();
+});
+customUpload.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', handleFileSelection);
+
+function handleFileSelection() {
+    const files = Array.from(fileInput.files);
+    if (files.length >= 2 && files.length <= 10) {
+        uploadLabelText.textContent = `${files.length} files selected`;
+        analyzeBtn.disabled = false;
+    } else {
+        uploadLabelText.textContent = "Click or drag to upload files";
+        analyzeBtn.disabled = true;
+    }
+}
+
+// Fuzzy string matching for team names
+function fuzzyMatch(str1, str2) {
+    if (!str1 || !str2) return false;
+    const clean = s => s.toLowerCase().replace(/[^a-z0-9]/g, '')
+        .replace(/united/g, 'utd')
+        .replace(/football/g, 'fc')
+        .replace(/club/g, 'c')
+        .replace(/sporting/g, 'sp')
+        .replace(/athletic/g, 'ath')
+        .replace(/association/g, 'as')
+        .replace(/wanderers/g, 'wds');
+    const a = clean(str1), b = clean(str2);
+    if (a === b) return true;
+    if (a.includes(b) || b.includes(a)) return true;
+    return false;
+}
+
+// Month/abbr to score mapping
+function monthToNum(str) {
+    const map = {
+        'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
+        'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12
+    };
+    str = str.toLowerCase();
+    return map[str] !== undefined ? map[str] : null;
+}
+function normalizeScore(pred) {
+    if (!pred) return pred;
+    pred = pred.replace(/\s+/g, '').replace(':', '-');
+    let regexMonth = /^(\d+)[-](jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)$/i;
+    let regexMonthRev = /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[-](\d+)$/i;
+    let m = pred.match(regexMonth);
+    if (m) {
+        let left = m[1], right = monthToNum(m[2]);
+        if (right !== null) return `${left}:${right}`;
+    }
+    m = pred.match(regexMonthRev);
+    if (m) {
+        let left = monthToNum(m[1]), right = m[2];
+        if (left !== null) return `${left}:${right}`;
+    }
+    let score = pred.match(/^(\d+)[-:](\d+)$/);
+    if (score) return `${score[1]}:${score[2]}`;
+    return pred;
+}
+
+// Normalize prediction to win/draw type
+function predictionType(pred) {
+    if (!pred) return '';
+    pred = normalizeScore(pred);
+    const txt = pred.toString().toLowerCase().trim();
+    if (['draw', 'x'].includes(txt)) return 'draw';
+    if (txt === '1') return 'home';
+    if (txt === '2') return 'away';
+    const score = txt.match(/^(\d+):(\d+)$/);
+    if (score) {
+        if (parseInt(score[1]) > parseInt(score[2])) return 'home';
+        if (parseInt(score[2]) > parseInt(score[1])) return 'away';
+        return 'draw';
+    }
+    return '';
+}
+
+// Parse CSV file, output array of match objects
+function parseCSV(file, index) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const content = e.target.result;
+            const lines = content.split('\n').filter(l=>l.trim());
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            const matches = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                if (values.length < 2) continue;
+                const match = {};
+                for (let j = 0; j < headers.length; j++) {
+                    let value = values[j] ? values[j].trim().replace(/"/g, '') : '';
+                    if (headers[j].toLowerCase().includes('prediction') || headers[j].toLowerCase().includes('score')) {
+                        value = normalizeScore(value);
+                    }
+                    match[headers[j]] = value;
+                }
+                match.source = `Source ${index+1}`;
+                if (match['Home Team'] && match['Away Team']) {
+                    match['Home Team'] = match['Home Team'].replace(/ FC$| Club$| Team$/i, '').trim();
+                    match['Away Team'] = match['Away Team'].replace(/ FC$| Club$| Team$/i, '').trim();
+                }
+                matches.push(match);
+            }
+            resolve(matches);
+        };
+        reader.onerror = reject;
+        reader.readAsText(file);
+    });
+}
+
+// Group matches by fuzzy home/away team, include all predictions
+function extractMaximumConsensusMatches(allFileMatches) {
+    const matchGroups = [];
+    allFileMatches.forEach((matches, fileIdx) => {
+        matches.forEach(match => {
+            let found = false;
+            for (const group of matchGroups) {
+                const ref = group.ref;
+                if (
+                    fuzzyMatch(match['Home Team'], ref['Home Team']) &&
+                    fuzzyMatch(match['Away Team'], ref['Away Team'])
+                ) {
+                    group.instances.push({...match, fileIdx});
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) matchGroups.push({
+                ref: match,
+                instances: [{...match, fileIdx}]
             });
         });
-        
-        // Fuzzy matching function
-        function fuzzyMatch(str1, str2) {
-            const cleanStr1 = str1.toLowerCase().replace(/[^a-z0-9]/g, '');
-            const cleanStr2 = str2.toLowerCase().replace(/[^a-z0-9]/g, '');
-            
-            // Exact match after cleaning
-            if (cleanStr1 === cleanStr2) return true;
-            
-            // Contains match
-            if (cleanStr1.includes(cleanStr2)) return true;
-            if (cleanStr2.includes(cleanStr1)) return true;
-            
-            // Common abbreviations
-            const abbreviations = {
-                'united': 'utd',
-                'football': 'fc',
-                'club': 'c',
-                'sporting': 'sp',
-                'athletic': 'ath',
-                'association': 'as',
-                'wanderers': 'wds'
-            };
-            
-            let modifiedStr1 = cleanStr1;
-            let modifiedStr2 = cleanStr2;
-            
-            for (const [full, abbrev] of Object.entries(abbreviations)) {
-                modifiedStr1 = modifiedStr1.replace(full, abbrev);
-                modifiedStr2 = modifiedStr2.replace(full, abbrev);
-            }
-            
-            return modifiedStr1 === modifiedStr2;
+    });
+    let maxSources = Math.max(...matchGroups.map(g => {
+        const uniqueSources = new Set(g.instances.map(m => m.fileIdx));
+        return uniqueSources.size;
+    }), 0);
+    // Only groups present in maxSources files
+    const resultGroups = matchGroups.filter(g => {
+        const uniqueSources = new Set(g.instances.map(m => m.fileIdx));
+        return uniqueSources.size === maxSources;
+    });
+    return {matches: resultGroups, consensusLevel: maxSources};
+}
+
+// Automatic selection: only matches with same prediction type in all sources are auto-selected
+function autoSelectGroups(matchGroups) {
+    const selected = [];
+    matchGroups.forEach((group, idx) => {
+        let types = group.instances.map(inst => predictionType(
+            inst['Prediction'] || inst['Score Prediction'] || inst['Correct Score'] || '-'
+        ));
+        const firstType = types[0];
+        if (firstType && types.every(t => t === firstType)) {
+            selected.push(idx);
         }
-        
-        // Parse CSV file
-        function parseCSV(file, index) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    const content = e.target.result;
-                    const lines = content.split('\n');
-                    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-                    
-                    const matches = [];
-                    
-                    for (let i = 1; i < lines.length; i++) {
-                        if (!lines[i].trim()) continue;
-                        
-                        const values = lines[i].split(',');
-                        const match = {};
-                        
-                        for (let j = 0; j < headers.length; j++) {
-                            let value = values[j] ? values[j].trim().replace(/"/g, '') : '';
-                            
-                            // Handle prediction/score format (1-0, 1:0, 2-1, etc.)
-                            if (headers[j].toLowerCase().includes('prediction') || 
-                                headers[j].toLowerCase().includes('score')) {
-                                value = value.replace(':', '-');
-                            }
-                            
-                            match[headers[j]] = value;
-                        }
-                        
-                        // Standardize team names
-                        if (match['Home Team'] && match['Away Team']) {
-                            match['Home Team'] = match['Home Team'].replace(/ FC$| Club$| Team$/, '').trim();
-                            match['Away Team'] = match['Away Team'].replace(/ FC$| Club$| Team$/, '').trim();
-                        }
-                        
-                        matches.push({
-                            ...match,
-                            source: `Source ${index + 1}`
-                        });
-                    }
-                    
-                    resolve(matches);
-                };
-                
-                reader.onerror = reject;
-                reader.readAsText(file);
-            });
+    });
+    return selected;
+}
+
+function updateStage1Results(matchGroups, consensusLevel) {
+    selectedGroups = [];
+    const tbody = document.getElementById('stage1-results');
+    tbody.innerHTML = '';
+    document.getElementById('total-matches').textContent = matchGroups.length;
+    document.getElementById('consensus-level').textContent = consensusLevel > 0 ? consensusLevel + " sources" : "-";
+    if (matchGroups.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="empty-state">
+                    <i class="fas fa-futbol"></i>
+                    <p>No consensus matches found.</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    const autoSelected = autoSelectGroups(matchGroups);
+    matchGroups.forEach((group, idx) => {
+        const homeTeam = Object.entries(group.instances.reduce((acc, m) => {
+            acc[m['Home Team']] = (acc[m['Home Team']]||0)+1; return acc;
+        }, {})).sort((a,b)=>b[1]-a[1])[0][0];
+        const awayTeam = Object.entries(group.instances.reduce((acc, m) => {
+            acc[m['Away Team']] = (acc[m['Away Team']]||0)+1; return acc;
+        }, {})).sort((a,b)=>b[1]-a[1])[0][0];
+        const time = Object.entries(group.instances.reduce((acc,m)=>{
+            const t = m['Time']||m['Date']||m['DateTime']||'';
+            if (t) acc[t]=(acc[t]||0)+1; return acc;
+        },{})).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+        const sources = group.instances.map(m => m.source);
+        const predictionRows = group.instances.map(m => {
+            let pred = m['Prediction']||m['Score Prediction']||m['Correct Score']||'-';
+            return `<div><span class="source-badge">${m.source}</span>: <strong>${pred}</strong></div>`;
+        }).join('');
+        const row = document.createElement('tr');
+        row.className = 'match-row';
+        row.innerHTML = `
+            <td>
+                <button class="select-btn${autoSelected.includes(idx) ? ' selected' : ''}" data-idx="${idx}">${autoSelected.includes(idx) ? 'Selected' : 'Select'}</button>
+            </td>
+            <td>
+                ${homeTeam} vs ${awayTeam}
+                <div class="match-time">${time}</div>
+            </td>
+            <td>${time}</td>
+            <td>
+                <div class="sources-list">
+                    ${sources.map(s => `<span class="source-badge">${s}</span>`).join('')}
+                </div>
+            </td>
+            <td>
+                ${predictionRows}
+            </td>
+        `;
+        if (autoSelected.includes(idx)) {
+            row.classList.add('highlight');
+            selectedGroups.push(group);
         }
-        
-        // Find similar matches across all files
-        function findSimilarMatches(allFileMatches) {
-            const allMatches = [];
-            const matchGroups = [];
-            
-            // Flatten all matches from all files
-            allFileMatches.forEach((fileMatches, fileIndex) => {
-                fileMatches.forEach(match => {
-                    allMatches.push({
-                        ...match,
-                        fileIndex
-                    });
-                });
-            });
-            
-            // Group similar matches
-            for (let i = 0; i < allMatches.length; i++) {
-                const currentMatch = allMatches[i];
-                let foundGroup = false;
-                
-                // Check if this match belongs to any existing group
-                for (const group of matchGroups) {
-                    const groupMatch = group.matches[0];
-                    
-                    // Fuzzy match for teams
-                    const homeMatch = fuzzyMatch(currentMatch['Home Team'], groupMatch['Home Team']);
-                    const awayMatch = fuzzyMatch(currentMatch['Away Team'], groupMatch['Away Team']);
-                    
-                    if (homeMatch && awayMatch) {
-                        group.matches.push(currentMatch);
-                        foundGroup = true;
-                        break;
-                    }
-                }
-                
-                // If no group found, create a new one
-                if (!foundGroup) {
-                    matchGroups.push({
-                        key: `${currentMatch['Home Team']} vs ${currentMatch['Away Team']}`,
-                        matches: [currentMatch]
-                    });
-                }
-            }
-            
-            // Filter groups with at least 3 matches from different sources
-            const filteredGroups = matchGroups.filter(group => {
-                const uniqueSources = new Set(group.matches.map(m => m.fileIndex));
-                return uniqueSources.size >= 3;
-            });
-            
-            // Prepare the result
-            const result = filteredGroups.map(group => {
-                const sources = [...new Set(group.matches.map(m => m.source))];
-                const predictions = group.matches.map(m => {
-                    const pred = m['Prediction'] || m['Score Prediction'] || m['Correct Score'] || '';
-                    return {
-                        prediction: pred,
-                        source: m.source
-                    };
-                });
-                
-                // Determine the most common team names
-                const homeTeamCounts = {};
-                const awayTeamCounts = {};
-                
-                group.matches.forEach(m => {
-                    homeTeamCounts[m['Home Team']] = (homeTeamCounts[m['Home Team']] || 0) + 1;
-                    awayTeamCounts[m['Away Team']] = (awayTeamCounts[m['Away Team']] || 0) + 1;
-                });
-                
-                const homeTeam = Object.entries(homeTeamCounts).sort((a, b) => b[1] - a[1])[0][0];
-                const awayTeam = Object.entries(awayTeamCounts).sort((a, b) => b[1] - a[1])[0][0];
-                
-                // Find the most common match time
-                const timeCounts = {};
-                group.matches.forEach(m => {
-                    if (m['Time'] || m['Date'] || m['DateTime']) {
-                        const time = m['Time'] || m['Date'] || m['DateTime'];
-                        timeCounts[time] = (timeCounts[time] || 0) + 1;
-                    }
-                });
-                
-                const matchTime = Object.entries(timeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Time not available';
-                
-                return {
-                    match: `${homeTeam} vs ${awayTeam}`,
-                    homeTeam,
-                    awayTeam,
-                    matchTime,
-                    sources,
-                    sourceCount: sources.length,
-                    predictions,
-                    allMatches: group.matches
-                };
-            });
-            
-            // Sort by number of sources (descending)
-            return result.sort((a, b) => b.sourceCount - a.sourceCount);
-        }
-        
-        // Find consensus predictions
-        function findConsensusPredictions(commonMatches) {
-            return commonMatches.map(match => {
-                const predictionCounts = {};
-                
-                // Count each prediction
-                match.predictions.forEach(p => {
-                    if (p.prediction) {
-                        predictionCounts[p.prediction] = (predictionCounts[p.prediction] || 0) + 1;
-                    }
-                });
-                
-                // Find the most common prediction
-                const sortedPredictions = Object.entries(predictionCounts).sort((a, b) => b[1] - a[1]);
-                const mostCommonPrediction = sortedPredictions[0]?.[0] || '';
-                const consensusCount = sortedPredictions[0]?.[1] || 0;
-                
-                // Parse the prediction
-                const [homeGoals, awayGoals] = mostCommonPrediction.split('-').map(Number);
-                const isHomeWin = homeGoals > awayGoals;
-                const isAwayWin = awayGoals > homeGoals;
-                const isDraw = homeGoals === awayGoals;
-                const goalDifference = Math.abs(homeGoals - awayGoals);
-                
-                // Format the prediction for display
-                let predictionDisplay = mostCommonPrediction;
-                let predictionClass = '';
-                
-                if (isHomeWin) {
-                    predictionClass = 'home-win';
-                    predictionDisplay = `${homeGoals}:${awayGoals} (Home Win)`;
-                } else if (isAwayWin) {
-                    predictionClass = 'away-win';
-                    predictionDisplay = `${homeGoals}:${awayGoals} (Away Win)`;
-                } else if (isDraw) {
-                    predictionClass = 'draw';
-                    predictionDisplay = `${homeGoals}:${awayGoals} (Draw)`;
-                }
-                
-                return {
-                    ...match,
-                    consensusPrediction: mostCommonPrediction,
-                    consensusCount,
-                    isHomeWin,
-                    isAwayWin,
-                    isDraw,
-                    homeGoals,
-                    awayGoals,
-                    goalDifference,
-                    predictionDisplay,
-                    predictionClass
-                };
-            }).filter(match => {
-                // Only include matches with clear consensus
-                return match.consensusPrediction && match.consensusCount >= 2;
-            });
-        }
-        
-        // Find safest predictions
-        function findSafestPredictions(consensusMatches) {
-            return consensusMatches
-                .filter(match => match.goalDifference >= 2) // At least 2 goal difference
-                .sort((a, b) => b.goalDifference - a.goalDifference);
-        }
-        
-        // Update stage 1 results
-        function updateStage1Results(matches) {
-            const tbody = document.getElementById('stage1-results');
-            tbody.innerHTML = '';
-            
-            if (matches.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="4" class="empty-state">
-                            <i class="fas fa-futbol"></i>
-                            <p>No common matches found across 3+ sources</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            let totalSources = 0;
-            let mostCommonMatch = '';
-            let maxSources = 0;
-            
-            matches.forEach(match => {
-                totalSources += match.sourceCount;
-                
-                if (match.sourceCount > maxSources) {
-                    maxSources = match.sourceCount;
-                    mostCommonMatch = match.match;
-                }
-                
-                const row = document.createElement('tr');
-                row.className = 'match-row';
-                row.innerHTML = `
-                    <td>
-                        ${match.match}
-                        <div class="match-time">${match.matchTime}</div>
-                    </td>
-                    <td>${match.matchTime}</td>
-                    <td>
-                        <div class="sources-list">
-                            ${match.sources.map(s => `<span class="source-badge">${s}</span>`).join('')}
-                        </div>
-                    </td>
-                    <td>${match.predictions.map(p => `${p.prediction || '-'} (${p.source})`).join(', ')}</td>
-                `;
-                tbody.appendChild(row);
-            });
-            
-            // Update stats
-            document.getElementById('total-matches').textContent = matches.length;
-            document.getElementById('avg-sources').textContent = matches.length > 0 ? (totalSources / matches.length).toFixed(1) : '0';
-            document.getElementById('common-match').textContent = mostCommonMatch || '-';
-        }
-        
-        // Update stage 2 results
-        function updateStage2Results(matches) {
-            const tbody = document.getElementById('stage2-results');
-            tbody.innerHTML = '';
-            
-            if (matches.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="empty-state">
-                            <i class="fas fa-futbol"></i>
-                            <p>No consensus predictions found yet</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            let homeWins = 0;
-            let awayWins = 0;
-            let draws = 0;
-            
-            matches.forEach(match => {
-                if (match.isHomeWin) homeWins++;
-                if (match.isAwayWin) awayWins++;
-                if (match.isDraw) draws++;
-                
-                const row = document.createElement('tr');
-                row.className = 'match-row';
-                row.innerHTML = `
-                    <td>
-                        ${match.match}
-                        <div class="match-time">${match.matchTime}</div>
-                    </td>
-                    <td>${match.matchTime}</td>
-                    <td><span class="goal-display ${match.predictionClass}">${match.predictionDisplay}</span></td>
-                    <td>${match.consensusCount}/${match.sourceCount} sources</td>
-                    <td>
-                        <div class="sources-list">
-                            ${match.sources.map(s => `<span class="source-badge">${s}</span>`).join('')}
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-            
-            // Update stats
-            document.getElementById('consensus-count').textContent = matches.length;
-            document.getElementById('home-wins').textContent = homeWins;
-            document.getElementById('away-wins').textContent = awayWins;
-            document.getElementById('draws').textContent = draws;
-        }
-        
-        // Update stage 3 results
-        function updateStage3Results(matches, minGoalDiff = 2) {
-            const filteredMatches = matches.filter(m => m.goalDifference >= minGoalDiff);
-            const tbody = document.getElementById('stage3-results');
-            tbody.innerHTML = '';
-            
-            if (filteredMatches.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="empty-state">
-                            <i class="fas fa-futbol"></i>
-                            <p>No safe predictions found with ${minGoalDiff}+ goal difference</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            let totalGD = 0;
-            let highestGD = 0;
-            
-            filteredMatches.forEach(match => {
-                totalGD += match.goalDifference;
-                if (match.goalDifference > highestGD) {
-                    highestGD = match.goalDifference;
-                }
-                
-                const row = document.createElement('tr');
-                row.className = 'match-row';
-                if (match.goalDifference >= 3) {
-                    row.classList.add('highlight');
-                }
-                row.innerHTML = `
-                    <td>
-                        ${match.match}
-                        <div class="match-time">${match.matchTime}</div>
-                    </td>
-                    <td>${match.matchTime}</td>
-                    <td><span class="goal-display ${match.predictionClass}">${match.predictionDisplay}</span></td>
-                    <td>${match.goalDifference}</td>
-                    <td>
-                        <div class="sources-list">
-                            ${match.sources.map(s => `<span class="source-badge">${s}</span>`).join('')}
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-            
-            // Update stats
-            document.getElementById('safe-count').textContent = filteredMatches.length;
-            document.getElementById('highest-gd').textContent = highestGD;
-            document.getElementById('avg-gd').textContent = filteredMatches.length > 0 ? (totalGD / filteredMatches.length).toFixed(1) : '0';
-        }
-        
-        // Filter by goal difference
-        function filterByGoalDifference() {
-            const minGoalDiff = parseInt(document.getElementById('goal-difference').value);
-            updateStage3Results(safePredictions, minGoalDiff);
-        }
-        
-        // Filter by minimum sources
-        function filterByMinSources() {
-            const minSources = parseInt(document.getElementById('min-sources').value);
-            const filteredMatches = allMatches.filter(match => match.sourceCount >= minSources);
-            updateStage1Results(filteredMatches);
-        }
-        
-        // Filter by minimum consensus
-        function filterByMinConsensus() {
-            const minConsensus = parseInt(document.getElementById('min-consensus').value);
-            const filteredMatches = consensusMatches.filter(match => match.consensusCount >= minConsensus);
-            updateStage2Results(filteredMatches);
-        }
-        
-        // Export to PNG
-        function exportToPNG() {
-            const element = document.getElementById('stage3');
-            const card = element.querySelector('.card');
-            
-            // Temporarily hide the export button for the screenshot
-            const exportBtn = document.getElementById('export-btn');
-            exportBtn.style.visibility = 'hidden';
-            
-            html2canvas(card, {
-                scale: 2,
-                logging: false,
-                useCORS: true,
-                allowTaint: true
-            }).then(canvas => {
-                exportBtn.style.visibility = 'visible';
-                
-                // Create download link
-                const link = document.createElement('a');
-                link.download = 'safest-predictions.png';
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            });
-        }
-        
-        // Main analyze function
-        analyzeBtn.addEventListener('click', async function() {
-            const fileInputs = [
-                document.getElementById('file1'),
-                document.getElementById('file2'),
-                document.getElementById('file3'),
-                document.getElementById('file4'),
-                document.getElementById('file5')
-            ];
-            
-            const files = fileInputs.map(input => input.files[0]).filter(Boolean);
-            
-            if (files.length < 3) {
-                alert('Please upload at least 3 CSV files for analysis.');
-                return;
-            }
-            
-            analyzeBtn.disabled = true;
-            analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
-            progressBar.style.width = '0%';
-            
-            try {
-                // Parse all files
-                const parsePromises = files.map((file, index) => parseCSV(file, index));
-                const allFileMatches = await Promise.all(parsePromises);
-                progressBar.style.width = '30%';
-                
-                // Stage 1: Find common matches
-                allMatches = findSimilarMatches(allFileMatches);
-                updateStage1Results(allMatches);
-                progressBar.style.width = '60%';
-                
-                // Stage 2: Find consensus predictions
-                consensusMatches = findConsensusPredictions(allMatches);
-                updateStage2Results(consensusMatches);
-                progressBar.style.width = '80%';
-                
-                // Stage 3: Find safest predictions
-                safePredictions = findSafestPredictions(consensusMatches);
-                updateStage3Results(safePredictions);
-                progressBar.style.width = '100%';
-                
-                // Enable tab navigation if it was hidden
-                document.querySelector('.tabs').style.display = 'flex';
-                
-            } catch (error) {
-                console.error('Error analyzing files:', error);
-                alert('An error occurred while analyzing the files. Please check the console for details.');
-            } finally {
-                analyzeBtn.disabled = false;
-                analyzeBtn.innerHTML = '<i class="fas fa-chart-bar"></i> Analyze Files';
-                
-                // Auto-scroll to results after analysis
-                setTimeout(() => {
-                    document.querySelector('.results').scrollIntoView({ behavior: 'smooth' });
-                }, 300);
+        tbody.appendChild(row);
+    });
+    // Add select/deselect logic
+    const selectBtns = document.querySelectorAll('.select-btn');
+    selectBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const idx = parseInt(this.dataset.idx);
+            const tr = this.closest('tr');
+            if (btn.classList.contains('selected')) {
+                btn.classList.remove('selected');
+                btn.textContent = 'Select';
+                tr.classList.remove('highlight');
+                selectedGroups = selectedGroups.filter(g => g !== matchGroups[idx]);
+            } else {
+                btn.classList.add('selected');
+                btn.textContent = 'Selected';
+                tr.classList.add('highlight');
+                selectedGroups.push(matchGroups[idx]);
             }
         });
-        
-        // Initialize event listeners
-        document.getElementById('goal-difference').addEventListener('change', filterByGoalDifference);
-        document.getElementById('min-sources').addEventListener('change', filterByMinSources);
-        document.getElementById('min-consensus').addEventListener('change', filterByMinConsensus);
-        exportBtn.addEventListener('click', exportToPNG);
-    </script>
+    });
+}
+
+function exportSelectedToPNG() {
+    if (!selectedGroups.length) {
+        alert('No matches selected to export.');
+        return;
+    }
+    const container = document.getElementById('export-table-container');
+    container.innerHTML = '';
+
+    // Build export table for PNG
+    const table = document.createElement('table');
+    table.className = 'export-png-table';
+    // Title
+    const title = document.createElement('div');
+    title.className = 'export-png-title';
+    title.textContent = 'Selected Football Predictions';
+    container.appendChild(title);
+
+    // Table header
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+        <tr>
+            <th style="width:90px;">Time</th>
+            <th style="width:230px;">Teams Playing</th>
+            <th style="width:320px;">Predictions</th>
+        </tr>
+    `;
+    table.appendChild(thead);
+
+    // Table body
+    const tbody = document.createElement('tbody');
+    selectedGroups.forEach(group => {
+        // Most common team names & time
+        const homeTeam = Object.entries(group.instances.reduce((acc, m) => {
+            acc[m['Home Team']] = (acc[m['Home Team']]||0)+1; return acc;
+        }, {})).sort((a,b)=>b[1]-a[1])[0][0];
+        const awayTeam = Object.entries(group.instances.reduce((acc, m) => {
+            acc[m['Away Team']] = (acc[m['Away Team']]||0)+1; return acc;
+        }, {})).sort((a,b)=>b[1]-a[1])[0][0];
+        const time = Object.entries(group.instances.reduce((acc,m)=>{
+            const t = m['Time']||m['Date']||m['DateTime']||'';
+            if (t) acc[t]=(acc[t]||0)+1; return acc;
+        },{})).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+
+        // Merge teams cell
+        const teamsCell = document.createElement('td');
+        teamsCell.className = 'team-cell';
+        teamsCell.colSpan = 1;
+        teamsCell.innerHTML = `${homeTeam} <span style="color:#999;font-weight:400">vs</span> ${awayTeam}`;
+
+        // Merge predictions - one row per source, nice format
+        const predictionsCell = document.createElement('td');
+        predictionsCell.className = 'prediction-cell';
+        predictionsCell.style.textAlign = 'left';
+        predictionsCell.innerHTML = group.instances.map(inst => {
+            const pred = inst['Prediction']||inst['Score Prediction']||inst['Correct Score']||'-';
+            return `<span style="display:inline-block;margin-bottom:3px;"><strong>${inst.source}:</strong> ${pred}</span>`;
+        }).join('<br>');
+
+        const tr = document.createElement('tr');
+        // Arrange columns: time | teams | predictions
+        tr.appendChild(document.createElement('td')).innerHTML = `<div class="export-png-time">${time}</div>`;
+        tr.appendChild(teamsCell);
+        tr.appendChild(predictionsCell);
+        tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+
+    container.appendChild(table);
+    container.style.display = 'block';
+
+    // Hide export button for screenshot
+    exportBtn.style.visibility = 'hidden';
+
+    html2canvas(container, {
+        scale: 2,
+        backgroundColor: '#f8f9fa'
+    }).then(canvas => {
+        exportBtn.style.visibility = 'visible';
+        container.style.display = 'none';
+        // Download PNG
+        const link = document.createElement('a');
+        link.download = 'selected-predictions.png';
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+}
+
+analyzeBtn.addEventListener('click', async function() {
+    const files = Array.from(fileInput.files);
+    if (files.length < 2 || files.length > 10) {
+        alert('Please select between 2 and 10 CSV files.');
+        return;
+    }
+    analyzeBtn.disabled = true;
+    analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+    progressBar.style.width = '0%';
+    try {
+        const parsePromises = files.map((file, index) => parseCSV(file, index));
+        const allFileMatches = await Promise.all(parsePromises);
+        progressBar.style.width = '40%';
+        const {matches, consensusLevel} = extractMaximumConsensusMatches(allFileMatches);
+        progressBar.style.width = '100%';
+        updateStage1Results(matches, consensusLevel);
+    } catch (error) {
+        console.error('Error analyzing files:', error);
+        alert('An error occurred while analyzing the files. Please check the console for details.');
+    } finally {
+        analyzeBtn.disabled = false;
+        analyzeBtn.innerHTML = '<i class="fas fa-chart-bar"></i> Analyze Files';
+        setTimeout(() => {
+            document.querySelector('.results').scrollIntoView({behavior: 'smooth'});
+        }, 300);
+    }
+});
+
+exportBtn.addEventListener('click', exportSelectedToPNG);
+</script>
 </body>
 </html>
