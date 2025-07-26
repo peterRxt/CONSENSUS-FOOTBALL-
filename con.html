@@ -12,6 +12,7 @@
             --secondary: #ff5722;
             --success: #4caf50;
             --danger: #f44336;
+            --warning: #ff9800;
             --light: #f5f5f5;
             --gray: #757575;
             --light-gray: #e0e0e0;
@@ -205,9 +206,20 @@
         }
         .export-btn-container {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
             margin-bottom: 10px;
             gap: 10px;
+            flex-wrap: wrap;
+        }
+        .export-btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .action-btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
         .delete-btn {
             background: var(--danger);
@@ -218,6 +230,18 @@
             font-weight: 500;
             cursor: pointer;
             transition: background .2s;
+            min-width: 160px;
+        }
+        .narrow-btn {
+            background: var(--warning);
+            color: var(--white);
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background .2s;
+            min-width: 160px;
         }
         .clear-btn {
             background: var(--gray);
@@ -228,6 +252,17 @@
             font-weight: 500;
             cursor: pointer;
             transition: background .2s;
+        }
+        .preview-btn {
+            background: var(--primary-dark);
+            color: var(--white);
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background .2s;
+            min-width: 160px;
         }
         /* Tabs styling */
         .tabs {
@@ -372,15 +407,28 @@
                 </div>
                 <h2>Maximum Consensus Matches <span class="badge" id="stage1-badge">Fuzzy</span></h2>
                 <div class="export-btn-container">
-                    <button id="delete-unselected-btn" class="delete-btn">
-                        <i class="fas fa-trash-alt"></i> Delete Unselected
-                    </button>
-                    <button id="export-home-btn" class="btn btn-secondary" style="background:var(--primary);">
-                        <i class="fas fa-file-export"></i> Export Home Wins
-                    </button>
-                    <button id="export-away-btn" class="btn btn-secondary" style="background:var(--danger);">
-                        <i class="fas fa-file-export"></i> Export Away Wins
-                    </button>
+                    <div class="action-btn-group">
+                        <button id="delete-unselected-btn" class="delete-btn">
+                            <i class="fas fa-trash-alt"></i> Delete Unselected
+                        </button>
+                        <button id="delete-narrow-btn" class="narrow-btn">
+                            <i class="fas fa-filter"></i> Delete Narrow Wins
+                        </button>
+                    </div>
+                    <div class="export-btn-group">
+                        <button id="preview-home-btn" class="preview-btn">
+                            <i class="fas fa-eye"></i> Preview Home
+                        </button>
+                        <button id="preview-away-btn" class="preview-btn" style="background: var(--danger);">
+                            <i class="fas fa-eye"></i> Preview Away
+                        </button>
+                        <button id="export-home-btn" class="btn" style="background: var(--primary); min-width: 160px;">
+                            <i class="fas fa-file-export"></i> Export Home
+                        </button>
+                        <button id="export-away-btn" class="btn" style="background: var(--danger); min-width: 160px;">
+                            <i class="fas fa-file-export"></i> Export Away
+                        </button>
+                    </div>
                 </div>
                 <div class="stats">
                     <div class="stat-card">
@@ -434,7 +482,10 @@ const customUpload = document.getElementById('custom-upload');
 const uploadLabelText = document.getElementById('upload-label-text');
 const exportHomeBtn = document.getElementById('export-home-btn');
 const exportAwayBtn = document.getElementById('export-away-btn');
+const previewHomeBtn = document.getElementById('preview-home-btn');
+const previewAwayBtn = document.getElementById('preview-away-btn');
 const deleteUnselectedBtn = document.getElementById('delete-unselected-btn');
+const deleteNarrowBtn = document.getElementById('delete-narrow-btn');
 const clearBtn = document.getElementById('clear-btn');
 const tabs = document.querySelectorAll('.tab');
 let selectedGroups = [];
@@ -858,6 +909,62 @@ function clearData() {
     updateTabUI();
 }
 
+function deleteNarrowWins() {
+    if (!allMatchGroups.length) return;
+    
+    // Filter out matches with narrow wins (1 goal margin)
+    const filteredGroups = allMatchGroups.filter(group => {
+        // Check each prediction in the group
+        for (const inst of group.instances) {
+            const pred = inst['Prediction'] || inst['Score Prediction'] || inst['Correct Score'] || '';
+            const score = normalizeScore(pred).match(/^(\d+):(\d+)$/);
+            if (score) {
+                const home = parseInt(score[1]);
+                const away = parseInt(score[2]);
+                if (Math.abs(home - away) === 1) {
+                    return false; // Exclude this match
+                }
+            }
+        }
+        return true; // Keep this match
+    });
+    
+    // Update the table
+    updateStage1Results(filteredGroups, document.getElementById('consensus-level').textContent.replace(' sources', ''));
+    
+    // Clear selected groups since we've modified the data
+    selectedGroups = [];
+    saveToLocalStorage(document.getElementById('consensus-level').textContent.replace(' sources', ''));
+}
+
+function deleteUnselectedMatches() {
+    if (!allMatchGroups.length) return;
+    
+    // Keep only selected groups
+    allMatchGroups = allMatchGroups.filter((group, idx) => {
+        return selectedGroups.includes(group);
+    });
+    
+    // Update the table with only selected matches
+    updateStage1Results(allMatchGroups, allMatchGroups.length > 0 ? 
+        document.getElementById('consensus-level').textContent.replace(' sources', '') : 0);
+    
+    // Clear selected groups (they're all that's left now)
+    selectedGroups = [...allMatchGroups];
+    saveToLocalStorage(document.getElementById('consensus-level').textContent.replace(' sources', ''));
+}
+
+function previewMatches(type) {
+    // Simply filter the view to show only home or away wins
+    currentFilter = type;
+    filterMatches(type);
+    
+    // Scroll to the results section
+    setTimeout(() => {
+        document.querySelector('.results').scrollIntoView({behavior: 'smooth'});
+    }, 300);
+}
+
 function exportSelectedToPNG(type) {
     const groupsToExport = selectedGroups.filter(group => {
         const predType = getGroupPredictionType(group);
@@ -973,23 +1080,6 @@ function exportSelectedToPNG(type) {
     });
 }
 
-function deleteUnselectedMatches() {
-    if (!allMatchGroups.length) return;
-    
-    // Keep only selected groups
-    allMatchGroups = allMatchGroups.filter((group, idx) => {
-        return selectedGroups.includes(group);
-    });
-    
-    // Update the table with only selected matches
-    updateStage1Results(allMatchGroups, allMatchGroups.length > 0 ? 
-        document.getElementById('consensus-level').textContent.replace(' sources', '') : 0);
-    
-    // Clear selected groups (they're all that's left now)
-    selectedGroups = [...allMatchGroups];
-    saveToLocalStorage(document.getElementById('consensus-level').textContent.replace(' sources', ''));
-}
-
 analyzeBtn.addEventListener('click', async function() {
     const files = Array.from(fileInput.files);
     if (files.length < 2 || files.length > 10) {
@@ -1027,9 +1117,12 @@ tabs.forEach(tab => {
     });
 });
 
+previewHomeBtn.addEventListener('click', () => previewMatches('home'));
+previewAwayBtn.addEventListener('click', () => previewMatches('away'));
 exportHomeBtn.addEventListener('click', () => exportSelectedToPNG('home'));
 exportAwayBtn.addEventListener('click', () => exportSelectedToPNG('away'));
 deleteUnselectedBtn.addEventListener('click', deleteUnselectedMatches);
+deleteNarrowBtn.addEventListener('click', deleteNarrowWins);
 clearBtn.addEventListener('click', clearData);
 </script>
 </body>
