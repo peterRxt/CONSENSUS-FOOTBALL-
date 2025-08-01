@@ -99,16 +99,6 @@
             font-weight: bold;
         }
         
-        .gd-3plus {
-            background-color: #e74c3c;
-            color: white;
-        }
-        
-        .gd-2plus {
-            background-color: #f39c12;
-            color: white;
-        }
-        
         .loading {
             display: none;
             text-align: center;
@@ -335,15 +325,7 @@
                         html += `<tr class="match-category"><td colspan="6">${currentCompetition}</td></tr>`;
                     }
                     
-                    // Determine row class based on goal difference
-                    let rowClass = '';
-                    if (match.goalDifference >= 3) {
-                        rowClass = 'gd-3plus';
-                    } else if (match.goalDifference >= 2) {
-                        rowClass = 'gd-2plus';
-                    }
-                    
-                    html += `<tr class="${rowClass}">`;
+                    html += `<tr>`;
                     html += `<td>${match.time}</td>`;
                     html += `<td>${match.competition}</td>`;
                     html += `<td>${match.homeTeam} vs ${match.awayTeam}</td>`;
@@ -451,17 +433,7 @@
                     }
                     
                     const row = document.createElement('tr');
-                    
-                    // Set row color based on goal difference
-                    if (match.goalDifference >= 3) {
-                        row.style.backgroundColor = '#e74c3c';
-                        row.style.color = 'white';
-                    } else if (match.goalDifference >= 2) {
-                        row.style.backgroundColor = '#f39c12';
-                        row.style.color = 'white';
-                    } else {
-                        row.style.backgroundColor = '#f8f9fa';
-                    }
+                    row.style.backgroundColor = '#f8f9fa';
                     
                     // Add cells
                     [match.time, match.competition, `${match.homeTeam} vs ${match.awayTeam}`, 
